@@ -34,7 +34,13 @@ test('a visitor can register and lands on the verification notice', async ({ pag
     await page.getByLabel('Парола', { exact: true }).fill(password);
     await page.getByLabel('Повторете паролата').fill(password);
 
-    await page.getByRole('button', { name: 'Създай профил' }).click();
+    // Captured before the click: if the POST 500s, the URL stays on /register
+    // and a bare toHaveURL would just time out without saying why.
+    const [response] = await Promise.all([
+        page.waitForResponse((r) => r.request().method() === 'POST' && r.url().endsWith('/register')),
+        page.getByRole('button', { name: 'Създай профил' }).click(),
+    ]);
+    expect(response.status(), 'POST /register returned a server error').toBeLessThan(500);
 
     await expect(page).toHaveURL(/\/email\/verify/);
     await expect(page.getByRole('heading', { name: 'Потвърдете имейла си' })).toBeVisible();

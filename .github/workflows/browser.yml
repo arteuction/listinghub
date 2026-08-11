@@ -40,6 +40,12 @@ jobs:
       # file/array keep the very first requests working regardless.
       SESSION_DRIVER: file
       CACHE_STORE: file
+      # Registration fires Registered, whose verification mail is sent inline.
+      # With the .env.example default (smtp -> 127.0.0.1:2525) nothing is
+      # listening on the runner, so POST /register throws a transport exception
+      # and renders the error page instead of redirecting. `log` keeps the mail
+      # path exercised end to end without needing a mail server.
+      MAIL_MAILER: log
 
     steps:
       - uses: actions/checkout@v4
@@ -122,6 +128,7 @@ jobs:
       DB_PASSWORD: root
       SESSION_DRIVER: file
       CACHE_STORE: file
+      MAIL_MAILER: log
 
     steps:
       - uses: actions/checkout@v4
