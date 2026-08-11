@@ -327,7 +327,7 @@ before dual-gate SQLite+MariaDB testing was run against this codebase. Root caus
 default build is not — `title LIKE '%пекарн%'` therefore misses a title beginning with the
 uppercase `П` (`Пекарна Слънце`) even though it matches on MySQL/MariaDB's default collation. Not a
 regression from this iteration's work; tracked for a future pass on `PublicListingQuery::
-applyKeyword`.
+applyKeyword`. **Fixed in the follow-up pass below** — the SQLite gate is green with no exception.
 
 **Also fixed as a prerequisite:** migration `2026_08_11_000100_reshape_geo_bulgaria_only` used
 `dropForeign('cities_state_id_foreign')` (string constraint name) three times, which SQLite's
@@ -420,3 +420,61 @@ One test-portability note worth keeping: `TIME` columns normalise differently
 per driver — MySQL/MariaDB always return `H:i:s`, SQLite has no native TIME type
 and echoes back exactly what was written (`H:i`). The hour assertions compare the
 `H:i` prefix instead of the raw string so the same test is honest on both gates.
+
+---
+
+## Follow-up (post-3.4.2) — Unicode-correct free-text search
+
+| Gate | Result |
+|------|--------|
+| Pest suite — SQLite | ✅ **290 passed** (771 assertions) — **no exceptions; the suite is fully green on SQLite for the first time** |
+| Pest suite — MySQL 8 | ⏳ CI (no MySQL/MariaDB server available on the machine this pass ran on) |
+| Pint · Larastan · Deptrac | ✅ clean (173 files analysed, 0 violations) |
+
+Closes the SQLite Cyrillic search gap recorded under 3.4.1, and two related
+defects found while fixing it.
+
+**The gap.** SQLite's `LIKE` and `LOWER()` fold ASCII only unless the build carries ICU, which the
+stock PHP build does not. `title LIKE '%пекарн%'` therefore did not match `Пекарна Слънце`, while
+MySQL's default utf8mb4 collation matched it. For a Bulgarian-only platform this is the ordinary
+case, not an edge one: titles are capitalised and people type lower case.
+
+**The fix.** `App\Support\SqliteUnicode` registers a `mb_strtolower`-backed implementation of
+`lower()` on every SQLite connection, and `App\Support\SearchTerm` folds the term in PHP, so both
+sides of the comparison are folded and every query reads `LOWER(col) LIKE ? ESCAPE '!'`. The
+SQLite function is registered under the name of the built-in on purpose: a user-defined function
+takes precedence in SQLite, so one SQL string is correct on both drivers. The alternative — a
+differently-named function behind a driver check at each call site — is the shape that produced
+the bug in the first place. Registration hangs off `ConnectionEstablished` (per-connection, and it
+must survive a reconnect), with a sweep over already-resolved connections at boot for anything
+opened before the provider ran.
+
+**Two further defects, found while fixing the first:**
+
+1. **The escaping was driver-dependent, and the test that covered it passed for the wrong reason.**
+   `PublicListingQuery` escaped LIKE metacharacters with `\` and declared no `ESCAPE` clause. MySQL
+   treats `\` as the default LIKE escape, SQLite has no default at all — so on SQLite `\%` meant
+   "a literal backslash, then any run of characters". `it treats LIKE wildcards in the keyword as
+   literal characters` passed on SQLite only because the fixture contained no backslash. Both
+   drivers now use `ESCAPE '!'`, the convention 2.9B already established for exactly this reason
+   (`ESCAPE '\'` is a syntax error in a MySQL string literal).
+
+2. **The escape convention was written out three times** — `PublicListingQuery`,
+   `ListingSearchQuery` and `SettlementSearchController` — with the buggy variant in the first.
+   The rule now has one definition in `SearchTerm`, which folds and escapes together, so a call
+   site cannot bind a pattern without also getting the `ESCAPE` clause that pattern assumes.
+   Settlement autocomplete gains case-insensitivity as a side effect; it had the same gap.
+
+**Not verified here:** the MySQL leg. This pass ran on a machine with no MySQL/MariaDB server, so
+the dual-driver gate that earlier entries in this log describe was not repeated — CI's MySQL 8 job
+is the check on that side. The SQL involved (`LOWER(col) LIKE ? ESCAPE '!'`) is the construct 2.9B
+already verified on MariaDB, and `LOWER()` on MySQL utf8mb4 is Unicode-aware, so no behavioural
+change is expected there beyond backslashes now being literal in a search term rather than an
+escape character.
+
+**Cost:** wrapping the column in `LOWER()` means a per-row function call on MySQL. `LIKE '%term%'`
+is already a full scan on both drivers — no index was being used before and none is lost.
+
+14 tests in `CyrillicSearchTest`: case folding in both directions and mid-token, Latin text
+unaffected, description as well as title, `%` / `_` / `!` / `\` all literal, a term that genuinely
+contains `%`, the settlement endpoint, and the two `SearchTerm` contracts.

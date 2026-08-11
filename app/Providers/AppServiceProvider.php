@@ -5,7 +5,11 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Support\InstallationState;
+use App\Support\SqliteUnicode;
+use Illuminate\Database\Events\ConnectionEstablished;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -42,6 +46,22 @@ class AppServiceProvider extends ServiceProvider
             ->letters()
             ->numbers()
             ->when(! app()->runningUnitTests(), fn (Password $rule) => $rule->uncompromised()));
+
+        // Give SQLite a Unicode-aware LOWER() so free-text search behaves the
+        // same on the dev/test driver as it does on production MySQL. Bound to
+        // the event rather than the current connection because it must also
+        // run for lazily-opened connections and after a reconnect.
+        Event::listen(
+            ConnectionEstablished::class,
+            static fn (ConnectionEstablished $event) => SqliteUnicode::register($event->connection),
+        );
+
+        // A connection opened before this provider booted never saw that event.
+        // getConnections() returns only the already-resolved ones, so this does
+        // not open anything by asking.
+        foreach (DB::getConnections() as $connection) {
+            SqliteUnicode::register($connection);
+        }
 
         // Policies are auto-discovered by Laravel (App\Models\Foo ->
         // App\Policies\FooPolicy).

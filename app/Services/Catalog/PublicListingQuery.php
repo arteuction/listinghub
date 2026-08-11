@@ -10,6 +10,7 @@ use App\Models\Listing;
 use App\Models\Municipality;
 use App\Models\Region;
 use App\Models\Settlement;
+use App\Support\SearchTerm;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
@@ -104,13 +105,11 @@ final class PublicListingQuery
             return;
         }
 
-        // Escape the LIKE wildcards so a user-supplied % or _ is literal.
-        $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\%', '\_'], $term);
-        $like = '%'.$escaped.'%';
+        $pattern = SearchTerm::containsPattern($term);
 
-        $query->where(function (Builder $inner) use ($like): void {
-            $inner->where('listings.title', 'like', $like)
-                ->orWhere('listings.description', 'like', $like);
+        $query->where(function (Builder $inner) use ($pattern): void {
+            $inner->whereRaw(SearchTerm::likeExpression('listings.title'), [$pattern])
+                ->orWhereRaw(SearchTerm::likeExpression('listings.description'), [$pattern]);
         });
     }
 
