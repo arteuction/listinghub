@@ -80,8 +80,18 @@ class ListingController extends Controller
             return back()->withErrors(['transition' => 'Тази промяна на статуса не е позволена.']);
         }
 
+        $reason = trim((string) $request->input('reason', ''));
+
+        if ($move->requiresReason() && $reason === '') {
+            return back()->withErrors(['reason' => 'Причината е задължителна, за да знае собственикът какво да коригира.']);
+        }
+
+        if (mb_strlen($reason) > 1000) {
+            return back()->withErrors(['reason' => 'Причината трябва да е до 1000 знака.']);
+        }
+
         try {
-            $transition->handle($listing, $move);
+            $transition->handle($listing, $move, $reason !== '' ? $reason : null);
         } catch (InvalidListingTransition) {
             return back()->withErrors(['transition' => 'Статусът е променен междувременно. Опитайте отново.']);
         }

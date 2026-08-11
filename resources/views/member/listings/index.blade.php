@@ -62,6 +62,11 @@
                             <td class="px-4 py-3 text-slate-600">{{ $listing->settlement?->name ?? '—' }}</td>
                             <td class="px-4 py-3">
                                 <span class="rounded px-2 py-0.5 text-xs font-medium {{ $badge }}">{{ $label }}</span>
+                                @if ($listing->status === ListingStatus::Draft && $listing->moderation_note)
+                                    <p class="mt-1 max-w-xs text-xs text-amber-800">
+                                        Върната за корекции: {{ $listing->moderation_note }}
+                                    </p>
+                                @endif
                             </td>
                             <td class="px-4 py-3">
                                 <div class="flex items-center justify-end gap-3">
