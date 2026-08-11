@@ -17,10 +17,21 @@ use App\Http\Controllers\Admin\CustomFieldController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ListingController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Site\HomeController;
+use App\Http\Controllers\Site\ListingController as SiteListingController;
+use App\Http\Controllers\Site\SitemapController;
 use Illuminate\Support\Facades\Route;
 
-// Public landing (placeholder until the public layer iteration).
-Route::get('/', fn () => view('welcome'))->name('home');
+// --- Public catalog (3.3.0) ---
+// Bulgaria-only marketplace. Location narrowing below region level is done
+// with query parameters (?municipality=…&settlement=…) against the canonical
+// region page, so every listing has exactly one indexable browse path.
+Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/listings', [SiteListingController::class, 'index'])->name('listings.index');
+Route::get('/categories/{category:slug}', [SiteListingController::class, 'index'])->name('categories.show');
+Route::get('/regions/{region:slug}', [SiteListingController::class, 'index'])->name('regions.show');
+Route::get('/listings/{listing:slug}', [SiteListingController::class, 'show'])->name('listings.show');
+Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 
 // --- Authentication (3.0A) ---
 // `guest` keeps an already-authenticated user from re-POSTing /login and

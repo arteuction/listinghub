@@ -13,7 +13,6 @@
 .phpactor.json
 auth.json
 composer.phar
-package-lock.json
 yarn.lock
 /.fleet
 /.idea
