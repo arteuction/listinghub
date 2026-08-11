@@ -275,3 +275,64 @@ the same transaction as the listing write, so an invalid field leaves nothing be
 (`custom_fields.<key>`). Sync gained a full-listing purge (values whose field is not in the current
 category are dropped), so a **category change** removes the old category's values in a controlled
 way through Sync — never a manual delete. 7 acceptance tests; Sync (2.9A) suite still green.
+
+---
+
+## 3.4.1 — Bulgaria Map & Geo Search
+
+| Gate | Result |
+|------|--------|
+| Pest suite — SQLite | ⚠️ **254 passed, 1 failed** (679 assertions) — see note below |
+| Pest suite — MariaDB 11.4.5 | ✅ **255 passed** (683 assertions) |
+
+New public map endpoint `GET /api/catalog/map?bbox=west,south,east,north&category=...&region=...`
+returns a GeoJSON `FeatureCollection` of `Published` listings inside the bbox, reusing
+`PublicListingQuery` (the same filter stack as the catalog page) so map and list always agree on
+the result set — verified by dedicated parity tests. `App\Support\BBox` rejects any request whose
+bbox is malformed or falls outside Bulgaria's envelope (422). Coordinates resolve to the listing's
+own `latitude`/`longitude` when set, otherwise the settlement centroid (`App\Services\Catalog\
+MapListingQuery`, LEFT JOIN + `COALESCE`); listings with neither are excluded. Response capped at
+1000 features; both the map and settlement-autocomplete endpoints are throttled (120/min, 60/min).
+
+Public UI: a List/Map toggle on `/listings` (`resources/views/site/listings/index.blade.php`)
+preserves every active filter across the switch (`fullUrlWithQuery`), plus an EKATTE settlement
+autocomplete (region → municipality → settlement chain already existed; this adds free-text
+search via `GET /api/catalog/settlements`). The map itself
+(`resources/views/site/partials/map.blade.php`) uses MapLibre GL JS: `maxBounds` + `minZoom` lock
+the viewport to Bulgaria, GeoJSON clustering groups nearby markers, a popup shows the listing title
++ link (HTML-escaped client-side), and the bbox is written back into the browser URL so the view
+stays shareable. An always-in-DOM accessible list (`sr-only focus-within:not-sr-only`) gives
+keyboard/screen-reader users the same listings without touching the map canvas. Tile URL, feature
+cap, and viewport bounds are all `config('listinghub.map.*')` / `.env`-driven (`MAP_TILE_URL`,
+`MAP_MAX_FEATURES`) — OSM is the dev default; the docs flag that production should point at a
+provider with an SLA (OSM's tile policy explicitly disallows heavy unmanaged use).
+
+New composite indexes `(latitude, longitude)` on `listings` and `settlements` back the bbox range
+scan (migration `2026_08_11_000200_add_coordinate_indexes_for_map`).
+
+**Pre-existing bug found, not introduced by this iteration, documented not fixed (by decision):**
+`it filters by keyword across title and description` (`PublicCatalogTest`) fails only on SQLite.
+GitHub Actions CI only ever exercises MySQL (`.github/workflows/ci.yml`), so this never surfaced
+before dual-gate SQLite+MariaDB testing was run against this codebase. Root cause: SQLite's built-in
+`LIKE`/`LOWER()` case-fold Cyrillic only when SQLite is compiled with the ICU extension, which the
+default build is not — `title LIKE '%пекарн%'` therefore misses a title beginning with the
+uppercase `П` (`Пекарна Слънце`) even though it matches on MySQL/MariaDB's default collation. Not a
+regression from this iteration's work; tracked for a future pass on `PublicListingQuery::
+applyKeyword`.
+
+**Also fixed as a prerequisite:** migration `2026_08_11_000100_reshape_geo_bulgaria_only` used
+`dropForeign('cities_state_id_foreign')` (string constraint name) three times, which SQLite's
+schema grammar cannot execute at all (throws unconditionally) — this blocked the SQLite gate
+entirely before any of this iteration's own tests could run. Guarded with a driver check; the
+array-form `dropForeign(['column'])` calls elsewhere in the same migration already work on both
+drivers and were left untouched.
+
+**Also fixed:** `MapListingQuery`'s bbox `BETWEEN` comparison silently returned zero rows on this
+environment's portable PHP/PDO SQLite build, which binds PHP floats as SQLite `TEXT` rather than
+`REAL` — and SQLite orders `TEXT` after every `INTEGER`/`REAL` value, so the comparison was always
+false. Fixed by wrapping both the column expression and the bound parameters in `CAST(... AS
+DECIMAL(10,7))`, which forces numeric affinity and is valid on both SQLite and MySQL/MariaDB.
+
+23 new tests across `MapEndpointTest` (bbox validation, visibility — draft/pending/**suspended**
+excluded, coordinate resolution and fallback, category/region filter parity, feature shape) and
+`MapListToggleTest` (filter preservation across the List↔Map toggle, list/map result-set parity).

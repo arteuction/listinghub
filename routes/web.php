@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\MapController;
+use App\Http\Controllers\Api\SettlementSearchController;
 use App\Http\Controllers\Admin\CustomFieldController;
 /*
 |--------------------------------------------------------------------------
@@ -111,6 +113,20 @@ Route::middleware(['auth', 'active'])->group(function () {
 // SettlementLookupController: scoped per region, never the whole table).
 Route::get('/regions/{region:slug}/settlements', SettlementLookupController::class)
     ->name('regions.settlements');
+
+// --- Map API (3.5.0) ---
+// Both endpoints are public (no auth required), rate-limited, and cacheable.
+// The map endpoint reuses the same PublicListingQuery filter stack as the
+// catalog page, guaranteeing that map and list always show the same set.
+Route::prefix('api/catalog')->name('api.catalog.')->group(function () {
+    Route::get('/map', MapController::class)
+        ->middleware('throttle:120,1')
+        ->name('map');
+
+    Route::get('/settlements', SettlementSearchController::class)
+        ->middleware('throttle:60,1')
+        ->name('settlements');
+});
 
 // --- Admin (auth -> active -> permission:manage settings) ---
 Route::prefix('admin')->name('admin.')

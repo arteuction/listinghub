@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -27,6 +28,20 @@ use Illuminate\Support\Facades\Schema;
  */
 return new class extends Migration
 {
+    /**
+     * SQLite has no notion of a named foreign-key constraint to drop: it
+     * recreates the whole table (copy/rename) whenever a column or FK is
+     * altered, which drops the old constraint as a side effect. Laravel's
+     * SQLiteGrammar therefore throws on an explicit dropForeign() call — so
+     * on SQLite we skip it and let the later column/rename operation do the
+     * equivalent work; on MySQL the named drop is required as documented
+     * above (renamed tables keep the original constraint name).
+     */
+    private function isSqlite(): bool
+    {
+        return DB::connection()->getDriverName() === 'sqlite';
+    }
+
     public function up(): void
     {
         // ------------------------------------------------------------------ //
@@ -49,9 +64,11 @@ return new class extends Migration
         Schema::rename('cities', 'municipalities');
 
         // Legacy name — the constraint was created while the table was `cities`.
-        Schema::table('municipalities', function (Blueprint $table) {
-            $table->dropForeign('cities_state_id_foreign');
-        });
+        if (! $this->isSqlite()) {
+            Schema::table('municipalities', function (Blueprint $table) {
+                $table->dropForeign('cities_state_id_foreign');
+            });
+        }
 
         Schema::table('municipalities', function (Blueprint $table) {
             $table->renameColumn('state_id', 'region_id');

@@ -67,5 +67,6 @@
             <p>&copy; {{ date('Y') }} {{ config('app.name', 'ListingHub') }} — национален каталог за България.</p>
         </div>
     </footer>
+    @stack('scripts')
 </body>
 </html>
