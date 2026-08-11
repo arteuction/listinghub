@@ -7,6 +7,21 @@
 /storage/app/installed.lock
 /storage/pail
 /vendor
+
+# Runtime artefacts written by artisan/Pest/Deptrac. The .gitkeep files that
+# hold these directories in the repo stay tracked; everything the framework
+# generates inside them does not. Without these rules a local `verify.sh` run
+# leaves hundreds of untracked session and compiled-view files behind, which a
+# `git add -A` would happily commit.
+/bootstrap/cache/*.php
+/storage/framework/cache/data/*
+!/storage/framework/cache/data/.gitkeep
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitkeep
+/storage/framework/testing/*
+/storage/framework/views/*
+!/storage/framework/views/.gitkeep
+/.deptrac.cache
 .env
 .env.backup
 .env.production
@@ -23,3 +38,10 @@ yarn.lock
 # usable with attribution, and the platform is unusable without it.
 # CodeCanyon reference archives must NEVER enter the repo
 *.zip
+
+# Playwright artefacts
+/storage/playwright
+/storage/playwright-report
+/test-results
+/storage/lighthouse
+/.lighthouseci

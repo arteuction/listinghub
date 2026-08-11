@@ -20,7 +20,9 @@ Platform model: **Variant 3 (prepared hybrid)** — shared catalog с nullable `
 | 3.2.2 | Architecture Gate — Deptrac, Lefthook, check-doc-status | ✅ done |
 | 3.2.3 | Bulgaria Geo Foundation — Region/Municipality/Settlement, BG-only geo, map config | ✅ done |
 | 3.3.0 | Public Marketplace — категории, локации, search/filter/sort, pagination, sitemap | ✅ done |
-| 3.4.0 | Members & Ownership — регистрация, профили, owner CRUD, галерии, работно време | ⏳ planned |
+| 3.4.0 | Members & Ownership — регистрация, email verification, профили, owner CRUD, favourites, галерии | ✅ done |
+| 3.4.1 | Bulgaria Map & Geo Search — GeoJSON map endpoint, List/Map toggle, EKATTE autocomplete | ✅ done |
+| 3.4.2 | Listing detail completion — продукти/меню CRUD, работно време + изключения | ✅ done |
 | 3.5.0 | Trust & Interaction — reviews, claims, leads, moderation, user management | ⏳ planned |
 | 3.6.0 | Commerce — plans, subscriptions, Stripe, invoices, refunds | ⏳ planned |
 | 3.7.0 | Content & i18n — BG съдържание, CMS, SEO, FAQ, blog | ⏳ planned |

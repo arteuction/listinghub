@@ -1,0 +1,31 @@
+{
+  "_comment": [
+    "Only PUBLIC, INDEXABLE pages are collected. /login and the rest of the auth",
+    "flow ship <meta name=robots content=noindex> on purpose, so a Lighthouse SEO",
+    "score for them measures the noindex tag rather than anything worth gating.",
+    "Their accessibility is covered by axe in the Playwright job, which checks the",
+    "same pages more precisely."
+  ],
+  "ci": {
+    "collect": {
+      "url": [
+        "http://127.0.0.1:8000/",
+        "http://127.0.0.1:8000/listings"
+      ],
+      "numberOfRuns": 1,
+      "settings": {
+        "preset": "desktop",
+        "chromeFlags": "--no-sandbox --headless=new"
+      }
+    },
+    "assert": {
+      "assertions": {
+        "categories:accessibility": ["error", { "minScore": 0.95 }],
+        "categories:seo": ["error", { "minScore": 0.9 }],
+        "categories:best-practices": ["warn", { "minScore": 0.9 }],
+        "categories:performance": "off"
+      }
+    },
+    "upload": { "target": "filesystem", "outputDir": "./storage/lighthouse" }
+  }
+}
