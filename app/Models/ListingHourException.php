@@ -7,7 +7,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property Carbon|null $date
+ * @property string|null $opens_at
+ * @property string|null $closes_at
+ * @property bool $is_closed
+ * @property string|null $note
+ */
 class ListingHourException extends Model
 {
     use HasFactory;
