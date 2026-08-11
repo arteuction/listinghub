@@ -37,12 +37,12 @@ const BG_BBOX = '22.3,41.2,28.7,44.3';
 function settlementAt(float $lat, float $lng): Settlement
 {
     $region = Region::factory()->create();
-    $muni   = Municipality::factory()->create(['region_id' => $region->id]);
+    $muni = Municipality::factory()->create(['region_id' => $region->id]);
 
     return Settlement::factory()->create([
         'municipality_id' => $muni->id,
-        'latitude'        => $lat,
-        'longitude'       => $lng,
+        'latitude' => $lat,
+        'longitude' => $lng,
     ]);
 }
 
@@ -50,8 +50,8 @@ function publishedAt(Settlement $s, ?float $lat = null, ?float $lng = null): Lis
 {
     return Listing::factory()->published()->create([
         'settlement_id' => $s->id,
-        'latitude'      => $lat,
-        'longitude'     => $lng,
+        'latitude' => $lat,
+        'longitude' => $lng,
     ]);
 }
 
@@ -83,8 +83,8 @@ it('excludes draft and pending listings', function () {
     Listing::factory()->create(['settlement_id' => $s->id, 'title' => 'Draft one']);
     Listing::factory()->create([
         'settlement_id' => $s->id,
-        'title'         => 'Pending one',
-        'status'        => ListingStatus::Pending->value,
+        'title' => 'Pending one',
+        'status' => ListingStatus::Pending->value,
     ]);
 
     $res = $this->getJson('/api/catalog/map?bbox='.BG_BBOX);
@@ -99,9 +99,9 @@ it('excludes suspended listings', function () {
     $s = settlementAt(42.7, 25.5);
     Listing::factory()->create([
         'settlement_id' => $s->id,
-        'title'         => 'Suspended one',
-        'status'        => ListingStatus::Suspended->value,
-        'published_at'  => now(),
+        'title' => 'Suspended one',
+        'status' => ListingStatus::Suspended->value,
+        'published_at' => now(),
     ]);
 
     $res = $this->getJson('/api/catalog/map?bbox='.BG_BBOX);
@@ -155,11 +155,11 @@ it('uses the listing explicit coordinates when set', function () {
 it('excludes listings with no resolvable coordinates', function () {
     // Settlement with null lat/lng, listing also with null → no coords at all.
     $region = Region::factory()->create();
-    $muni   = Municipality::factory()->create(['region_id' => $region->id]);
+    $muni = Municipality::factory()->create(['region_id' => $region->id]);
     $s = Settlement::factory()->create([
         'municipality_id' => $muni->id,
-        'latitude'        => null,
-        'longitude'       => null,
+        'latitude' => null,
+        'longitude' => null,
     ]);
     $listing = publishedAt($s, lat: null, lng: null);
 
@@ -176,8 +176,8 @@ it('filters by category — map and catalog agree', function () {
 
     $s = settlementAt(42.7, 25.5);
 
-    $inA  = Listing::factory()->published()->create(['settlement_id' => $s->id, 'category_id' => $catA->id, 'title' => 'In A']);
-    $inB  = Listing::factory()->published()->create(['settlement_id' => $s->id, 'category_id' => $catB->id, 'title' => 'In B']);
+    $inA = Listing::factory()->published()->create(['settlement_id' => $s->id, 'category_id' => $catA->id, 'title' => 'In A']);
+    $inB = Listing::factory()->published()->create(['settlement_id' => $s->id, 'category_id' => $catB->id, 'title' => 'In B']);
 
     $res = $this->getJson('/api/catalog/map?bbox='.BG_BBOX.'&category='.$catA->slug);
     $res->assertOk();
@@ -190,8 +190,8 @@ it('filters by category — map and catalog agree', function () {
 it('filters by region', function () {
     $regionA = Region::factory()->create();
     $regionB = Region::factory()->create();
-    $muniA   = Municipality::factory()->create(['region_id' => $regionA->id]);
-    $muniB   = Municipality::factory()->create(['region_id' => $regionB->id]);
+    $muniA = Municipality::factory()->create(['region_id' => $regionA->id]);
+    $muniB = Municipality::factory()->create(['region_id' => $regionB->id]);
     $sA = Settlement::factory()->create(['municipality_id' => $muniA->id, 'latitude' => 42.7, 'longitude' => 25.5]);
     $sB = Settlement::factory()->create(['municipality_id' => $muniB->id, 'latitude' => 43.1, 'longitude' => 26.0]);
 

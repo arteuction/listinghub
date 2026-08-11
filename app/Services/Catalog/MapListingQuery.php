@@ -51,7 +51,7 @@ final class MapListingQuery
             'listings.longitude',
             DB::raw("{$effLat} as eff_lat"),
             DB::raw("{$effLng} as eff_lng"),
-            DB::raw("CASE WHEN listings.latitude IS NOT NULL THEN 1 ELSE 0 END as has_exact_coords"),
+            DB::raw('CASE WHEN listings.latitude IS NOT NULL THEN 1 ELSE 0 END as has_exact_coords'),
             'map_s.name as settlement_name',
         ]);
 

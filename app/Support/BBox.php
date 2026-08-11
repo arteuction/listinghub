@@ -15,8 +15,11 @@ final class BBox
 {
     // Bulgaria's geographic envelope with a 0.5° margin for edge listings.
     public const MIN_LNG = 22.0;
+
     public const MAX_LNG = 29.0;
+
     public const MIN_LAT = 41.0;
+
     public const MAX_LAT = 44.5;
 
     public function __construct(
@@ -50,8 +53,8 @@ final class BBox
 
     public function isWithinBulgaria(): bool
     {
-        return $this->west  >= self::MIN_LNG
-            && $this->east  <= self::MAX_LNG
+        return $this->west >= self::MIN_LNG
+            && $this->east <= self::MAX_LNG
             && $this->south >= self::MIN_LAT
             && $this->north <= self::MAX_LAT;
     }

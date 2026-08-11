@@ -39,13 +39,13 @@ class SettlementSearchController extends Controller
             ->get(['id', 'name', 'slug', 'type', 'municipality_id']);
 
         $results = $rows->map(fn (Settlement $s) => [
-            'id'           => $s->id,
-            'name'         => $s->name,
-            'slug'         => $s->slug,
-            'type'         => $s->type,
+            'id' => $s->id,
+            'name' => $s->name,
+            'slug' => $s->slug,
+            'type' => $s->type,
             'municipality' => $s->municipality?->name,
-            'region'       => $s->municipality?->region?->name,
-            'region_slug'  => $s->municipality?->region?->slug,
+            'region' => $s->municipality?->region?->name,
+            'region_slug' => $s->municipality?->region?->slug,
         ]);
 
         return response()->json($results)

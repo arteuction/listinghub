@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use App\Http\Controllers\Api\MapController;
-use App\Http\Controllers\Api\SettlementSearchController;
 use App\Http\Controllers\Admin\CustomFieldController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\ListingController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -16,8 +16,8 @@ use App\Http\Controllers\Admin\CustomFieldController;
 |
 */
 
-use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\ListingController;
+use App\Http\Controllers\Api\MapController;
+use App\Http\Controllers\Api\SettlementSearchController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\NewPasswordController;
@@ -114,7 +114,7 @@ Route::middleware(['auth', 'active'])->group(function () {
 Route::get('/regions/{region:slug}/settlements', SettlementLookupController::class)
     ->name('regions.settlements');
 
-// --- Map API (3.5.0) ---
+// --- Map API (3.4.1) ---
 // Both endpoints are public (no auth required), rate-limited, and cacheable.
 // The map endpoint reuses the same PublicListingQuery filter stack as the
 // catalog page, guaranteeing that map and list always show the same set.

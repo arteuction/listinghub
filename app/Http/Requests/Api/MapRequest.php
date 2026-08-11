@@ -22,12 +22,12 @@ class MapRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'bbox'         => ['required', 'string'],
-            'q'            => ['nullable', 'string', 'max:200'],
-            'category'     => ['nullable', 'string', 'max:100'],
-            'region'       => ['nullable', 'string', 'max:100'],
+            'bbox' => ['required', 'string'],
+            'q' => ['nullable', 'string', 'max:200'],
+            'category' => ['nullable', 'string', 'max:100'],
+            'region' => ['nullable', 'string', 'max:100'],
             'municipality' => ['nullable', 'string', 'max:100'],
-            'settlement'   => ['nullable', 'string', 'max:100'],
+            'settlement' => ['nullable', 'string', 'max:100'],
         ];
     }
 

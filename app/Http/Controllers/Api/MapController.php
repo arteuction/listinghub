@@ -38,38 +38,38 @@ class MapController extends Controller
             ], 422);
         }
 
-        $category     = $this->resolveCategory($request->query('category'));
-        $region       = $this->resolveRegion($request->query('region'));
+        $category = $this->resolveCategory($request->query('category'));
+        $region = $this->resolveRegion($request->query('region'));
         $municipality = $this->resolveMunicipality($request->query('municipality'), $region);
-        $settlement   = $this->resolveSettlement($request->query('settlement'), $municipality);
+        $settlement = $this->resolveSettlement($request->query('settlement'), $municipality);
 
         $rows = $this->map->build([
-            'q'            => $request->keyword(),
-            'category'     => $category,
-            'region'       => $region,
+            'q' => $request->keyword(),
+            'category' => $category,
+            'region' => $region,
             'municipality' => $municipality,
-            'settlement'   => $settlement,
+            'settlement' => $settlement,
         ], $bbox)->get();
 
         $features = $rows->map(function (object $row): array {
             return [
                 'type' => 'Feature',
                 'geometry' => [
-                    'type'        => 'Point',
+                    'type' => 'Point',
                     'coordinates' => [(float) $row->eff_lng, (float) $row->eff_lat],
                 ],
                 'properties' => [
-                    'id'         => $row->id,
-                    'title'      => $row->title,
-                    'url'        => route('listings.show', $row->slug),
+                    'id' => $row->id,
+                    'title' => $row->title,
+                    'url' => route('listings.show', $row->slug),
                     'settlement' => $row->settlement_name,
-                    'exact'      => (bool) $row->has_exact_coords,
+                    'exact' => (bool) $row->has_exact_coords,
                 ],
             ];
         });
 
         $response = response()->json([
-            'type'     => 'FeatureCollection',
+            'type' => 'FeatureCollection',
             'features' => $features,
         ]);
 
