@@ -23,6 +23,7 @@ use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Member\FavoriteController;
 use App\Http\Controllers\Member\ListingController as MemberListingController;
+use App\Http\Controllers\Member\ListingMediaController;
 use App\Http\Controllers\Member\ProfileController;
 use App\Http\Controllers\Site\HomeController;
 use App\Http\Controllers\Site\ListingController as SiteListingController;
@@ -89,6 +90,15 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/listings/{listing}/edit', [MemberListingController::class, 'edit'])->name('listings.edit');
         Route::put('/listings/{listing}', [MemberListingController::class, 'update'])->name('listings.update');
         Route::post('/listings/{listing}/submit', [MemberListingController::class, 'submit'])->name('listings.submit');
+
+        // Gallery. Ownership is checked by ListingPolicy AND the asset's morph
+        // pair, so an owner cannot act on another listing's asset id.
+        Route::post('/listings/{listing}/media', [ListingMediaController::class, 'store'])
+            ->middleware('throttle:30,1')->name('listings.media.store');
+        Route::post('/listings/{listing}/media/{asset}/cover', [ListingMediaController::class, 'cover'])
+            ->name('listings.media.cover');
+        Route::delete('/listings/{listing}/media/{asset}', [ListingMediaController::class, 'destroy'])
+            ->name('listings.media.destroy');
         Route::delete('/listings/{listing}', [MemberListingController::class, 'destroy'])->name('listings.destroy');
 
         Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
