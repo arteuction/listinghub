@@ -43,6 +43,21 @@ deptrac:
         - type: directory
           value: app/Policies/.*
 
+    - name: Middleware
+      collectors:
+        - type: directory
+          value: app/Http/Middleware/.*
+
+    - name: Providers
+      collectors:
+        - type: directory
+          value: app/Providers/.*
+
+    - name: Exceptions
+      collectors:
+        - type: directory
+          value: app/Exceptions/.*
+
   ruleset:
     Controllers:
       - Requests
@@ -51,25 +66,42 @@ deptrac:
       - Models
       - Enums
       - Support
+      - Exceptions
 
     Requests:
       - Enums
       - Support
+      - Exceptions
 
     Actions:
       - Models
       - Enums
       - Support
       - Services
+      - Exceptions
 
     Services:
       - Models
       - Enums
       - Support
+      - Exceptions
 
     Policies:
       - Models
       - Enums
+
+    Middleware:
+      - Models
+      - Enums
+      - Support
+      - Services
+
+    Providers:
+      - Models
+      - Enums
+      - Support
+      - Services
+      - Policies
 
     Models:
       - Enums
@@ -77,6 +109,10 @@ deptrac:
 
     Enums: []
 
-    Support: []
+    Support:
+      - Enums
+      - Exceptions
+
+    Exceptions: []
 
   skip_violations: {}
