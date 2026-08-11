@@ -7,8 +7,12 @@ namespace App\Enums;
 /**
  * The complete, closed set of legal listing status transitions.
  *
- * There is deliberately no Rejected or Archived operation — the original
- * product uses only Submitted (→ Pending here), Published and Suspended.
+ * There is deliberately no terminal Rejected or Archived status — the
+ * original product uses only Submitted (→ Pending here), Published and
+ * Suspended. RequestChanges (Pending → Draft, with a mandatory reason) is
+ * the "reject" of this map: the listing goes back to the owner editable and
+ * resubmittable, instead of dying in a state that would need its own rules
+ * for visibility, resubmission and deletion.
  * This enum IS the transition map; nothing else defines allowed moves.
  *
  * NOTE: methods are named fromStatus()/toStatus() — a backed enum already
@@ -20,6 +24,7 @@ enum ListingTransition: string
     case AutoPublish = 'auto_publish';
     case Approve = 'approve';
     case Disapprove = 'disapprove';
+    case RequestChanges = 'request_changes';
     case Suspend = 'suspend';
     case Restore = 'restore';
 
@@ -27,7 +32,7 @@ enum ListingTransition: string
     {
         return match ($this) {
             self::Submit, self::AutoPublish => ListingStatus::Draft,
-            self::Approve => ListingStatus::Pending,
+            self::Approve, self::RequestChanges => ListingStatus::Pending,
             self::Disapprove, self::Suspend => ListingStatus::Published,
             self::Restore => ListingStatus::Suspended,
         };
@@ -37,6 +42,7 @@ enum ListingTransition: string
     {
         return match ($this) {
             self::Submit => ListingStatus::Pending,
+            self::RequestChanges => ListingStatus::Draft,
             self::AutoPublish, self::Approve, self::Restore => ListingStatus::Published,
             self::Disapprove => ListingStatus::Pending,
             self::Suspend => ListingStatus::Suspended,
@@ -65,6 +71,16 @@ enum ListingTransition: string
         ));
     }
 
+    /**
+     * RequestChanges is the only move that DEMANDS an explanation: sending a
+     * listing back without saying why leaves the owner guessing. The
+     * controller enforces this; the enum records which moves need it.
+     */
+    public function requiresReason(): bool
+    {
+        return $this === self::RequestChanges;
+    }
+
     /** Imperative label for the admin button that applies this move. */
     public function adminLabel(): string
     {
@@ -73,6 +89,7 @@ enum ListingTransition: string
             self::AutoPublish => 'Публикувай',
             self::Approve => 'Одобри',
             self::Disapprove => 'Върни за преглед',
+            self::RequestChanges => 'Върни за корекции',
             self::Suspend => 'Спри',
             self::Restore => 'Възстанови',
         };

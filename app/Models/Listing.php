@@ -21,6 +21,7 @@ use Illuminate\Support\Carbon;
  * assigning the enum or the Carbon instance.
  *
  * @property ListingStatus $status
+ * @property string|null $moderation_note
  * @property Carbon|null $published_at
  * @property Category $category listings.category_id is NOT NULL
  */
@@ -31,7 +32,7 @@ class Listing extends Model
 
     protected $fillable = [
         'user_id', 'category_id', 'plan_id', 'settlement_id', 'organization_id',
-        'title', 'slug', 'description', 'status', 'is_featured',
+        'title', 'slug', 'description', 'status', 'moderation_note', 'is_featured',
         'phone', 'email', 'website', 'address', 'latitude', 'longitude',
         'published_at',
     ];

@@ -21,9 +21,9 @@ use Illuminate\Support\Facades\DB;
  */
 class TransitionListing
 {
-    public function handle(Listing $listing, ListingTransition $transition): Listing
+    public function handle(Listing $listing, ListingTransition $transition, ?string $note = null): Listing
     {
-        return DB::transaction(function () use ($listing, $transition): Listing {
+        return DB::transaction(function () use ($listing, $transition, $note): Listing {
             /** @var Listing $locked */
             $locked = Listing::query()
                 ->lockForUpdate()
@@ -34,6 +34,15 @@ class TransitionListing
             }
 
             $locked->status = $transition->toStatus();
+
+            // The note travels WITH the move that requires one, and any move
+            // leaving Draft clears it: a resubmitted listing is a new review,
+            // and a stale "fix X" banner on a published page helps no one.
+            if ($transition->requiresReason()) {
+                $locked->moderation_note = (string) $note;
+            } elseif ($transition->fromStatus() === ListingStatus::Draft) {
+                $locked->moderation_note = null;
+            }
 
             if ($transition->toStatus() === ListingStatus::Published && $locked->published_at === null) {
                 $locked->published_at = now();

@@ -11,6 +11,9 @@
 @if ($moves !== [])
     <form method="POST" action="{{ route('admin.listings.transition', $listing) }}">
         @csrf
+        @if (collect($moves)->contains(fn ($move) => $move->requiresReason()))
+            <input name="reason" placeholder="Причина (задължителна при връщане)" maxlength="1000">
+        @endif
         @foreach ($moves as $move)
             <button type="submit" name="transition" value="{{ $move->value }}">{{ $move->adminLabel() }}</button>
         @endforeach
