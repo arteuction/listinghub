@@ -21,7 +21,7 @@ four decisions:
 | Country selector in listing form | DROP | — | Single country; no UI selector |
 | International city SQL dumps (AU/BR/CA/DE/FR/GB/IN/MX/NL/RO/US …) | DROP | — | Only verified BG geo dataset ships |
 | Latitude/longitude on city | KEEP | 3.2.3 | Moved to `settlements`; rounded display optional |
-| Administrative boundaries / map | REDESIGN | 3.3.0 | GeoJSON per region; map locked to Bulgaria |
+| Administrative boundaries / map | REDESIGN | 3.4.1 | GeoJSON map endpoint; viewport locked to Bulgaria |
 
 ## Catalog & Listings
 
@@ -35,9 +35,9 @@ four decisions:
 | Featured listings | KEEP | 3.3.0 | `is_featured` flag, plan-gated |
 | Sitemap | REDESIGN | 3.3.0 | BG-only; spatie/laravel-sitemap |
 | Custom fields per category | KEEP | 3.3.0 | Declarative field schema (see DECLARATIVE_FIELDS.md) |
-| Product/menu items on listing | KEEP | 3.4.0 | `products` table |
+| Product/menu items on listing | KEEP | 3.4.2 | `products` table — deferred out of 3.4.0 |
 | Gallery images | REDESIGN | 3.4.0 | Unified `media_assets` (polymorphic) |
-| Working hours + exceptions | KEEP | 3.4.0 | `listing_hours` + `listing_hour_exceptions` |
+| Working hours + exceptions | KEEP | 3.4.2 | `listing_hours` + `listing_hour_exceptions` — deferred out of 3.4.0 |
 | Listing claim | KEEP | 3.5.0 | `listing_claims` with moderation flow |
 
 ## Members & Ownership

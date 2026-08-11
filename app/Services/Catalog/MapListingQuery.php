@@ -24,9 +24,34 @@ use Illuminate\Support\Facades\DB;
  */
 final class MapListingQuery
 {
-    public const MAX_FEATURES = 1000;
+    /** Used when listinghub.map.max_features is absent or not a usable number. */
+    public const DEFAULT_MAX_FEATURES = 1000;
+
+    /**
+     * Ceiling the configured cap cannot exceed. The cap exists to keep the
+     * response small enough to serialise and ship; an operator raising
+     * MAP_MAX_FEATURES without limit would defeat it, so config can only
+     * move the cap within a range we know the endpoint can serve.
+     */
+    public const HARD_MAX_FEATURES = 5000;
 
     public function __construct(private readonly PublicListingQuery $catalog) {}
+
+    /**
+     * Feature cap from config (MAP_MAX_FEATURES), clamped to [1, HARD_MAX_FEATURES].
+     * A zero, negative or non-numeric value means "not configured" and falls
+     * back to the default rather than returning an empty map.
+     */
+    public function maxFeatures(): int
+    {
+        $configured = config('listinghub.map.max_features');
+
+        if (! is_numeric($configured) || (int) $configured < 1) {
+            return self::DEFAULT_MAX_FEATURES;
+        }
+
+        return min((int) $configured, self::HARD_MAX_FEATURES);
+    }
 
     /**
      * @param  array<string, mixed>  $params  Same keys as PublicListingQuery (no sort needed).
@@ -69,7 +94,7 @@ final class MapListingQuery
         $base->whereRaw("CAST({$effLng} AS DECIMAL(10,7)) BETWEEN CAST(? AS DECIMAL(10,7)) AND CAST(? AS DECIMAL(10,7))", [$bbox->west, $bbox->east]);
 
         // Cap rows to prevent oversized responses; clustering is client-side.
-        $base->limit(self::MAX_FEATURES);
+        $base->limit($this->maxFeatures());
 
         return $base;
     }
