@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Catalog;
 
+use App\Models\Listing;
 use App\Support\BBox;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
@@ -29,6 +30,7 @@ final class MapListingQuery
 
     /**
      * @param  array<string, mixed>  $params  Same keys as PublicListingQuery (no sort needed).
+     * @return Builder<Listing>
      */
     public function build(array $params, BBox $bbox): Builder
     {

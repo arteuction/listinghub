@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\MapRequest;
 use App\Models\Category;
+use App\Models\Listing;
 use App\Models\Municipality;
 use App\Models\Region;
 use App\Models\Settlement;
@@ -51,19 +52,24 @@ class MapController extends Controller
             'settlement' => $settlement,
         ], $bbox)->get();
 
-        $features = $rows->map(function (object $row): array {
+        // eff_lat/eff_lng/settlement_name/has_exact_coords are query-only
+        // aliases from MapListingQuery's select() (not real Listing columns),
+        // so they're read via array access — Model implements ArrayAccess and
+        // returns mixed, which keeps static analysis honest without adding
+        // fictitious @property entries to the real Listing schema.
+        $features = $rows->map(function (Listing $row): array {
             return [
                 'type' => 'Feature',
                 'geometry' => [
                     'type' => 'Point',
-                    'coordinates' => [(float) $row->eff_lng, (float) $row->eff_lat],
+                    'coordinates' => [(float) $row['eff_lng'], (float) $row['eff_lat']],
                 ],
                 'properties' => [
                     'id' => $row->id,
                     'title' => $row->title,
                     'url' => route('listings.show', $row->slug),
-                    'settlement' => $row->settlement_name,
-                    'exact' => (bool) $row->has_exact_coords,
+                    'settlement' => $row['settlement_name'],
+                    'exact' => (bool) $row['has_exact_coords'],
                 ],
             ];
         });

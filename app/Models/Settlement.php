@@ -30,6 +30,7 @@ class Settlement extends Model
         return 'slug';
     }
 
+    /** @return BelongsTo<Municipality, $this> */
     public function municipality(): BelongsTo
     {
         return $this->belongsTo(Municipality::class);

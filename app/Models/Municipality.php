@@ -29,6 +29,7 @@ class Municipality extends Model
         return 'slug';
     }
 
+    /** @return BelongsTo<Region, $this> */
     public function region(): BelongsTo
     {
         return $this->belongsTo(Region::class);

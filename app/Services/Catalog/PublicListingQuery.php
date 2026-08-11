@@ -41,6 +41,7 @@ final class PublicListingQuery
     /**
      * @param  array<string, mixed>  $params  q, category, region, municipality, settlement, sort, featured
      */
+    /** @return Builder<Listing> */
     public function build(array $params): Builder
     {
         $query = Listing::query()
@@ -164,6 +165,10 @@ final class PublicListingQuery
         }
     }
 
+    /**
+     * @param  Builder<Listing>  $query
+     * @return Builder<Listing>
+     */
     private function applySort(Builder $query, mixed $sort): Builder
     {
         $key = is_string($sort) && array_key_exists($sort, self::SORTS) ? $sort : self::DEFAULT_SORT;
