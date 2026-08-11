@@ -38,9 +38,19 @@
             <nav aria-label="Основна навигация" class="ml-auto flex items-center gap-4 text-sm">
                 <a href="{{ route('listings.index') }}" class="text-slate-600 hover:text-slate-900">Всички обяви</a>
                 @auth
-                    <a href="{{ route('admin.dashboard') }}" class="text-slate-600 hover:text-slate-900">Панел</a>
+                    {{-- Members hold no admin permissions; linking them to the
+                         panel would only ever produce a 403. --}}
+                    @can('manage settings')
+                        <a href="{{ route('admin.dashboard') }}" class="text-slate-600 hover:text-slate-900">Панел</a>
+                    @endcan
+                    <a href="{{ route('profile.edit') }}" class="text-slate-600 hover:text-slate-900">Профил</a>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="text-slate-600 hover:text-slate-900">Изход</button>
+                    </form>
                 @else
                     <a href="{{ route('login') }}" class="text-slate-600 hover:text-slate-900">Вход</a>
+                    <a href="{{ route('register') }}" class="text-slate-600 hover:text-slate-900">Регистрация</a>
                 @endauth
             </nav>
         </div>
