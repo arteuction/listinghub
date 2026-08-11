@@ -5,6 +5,9 @@ declare(strict_types=1);
 use App\Enums\ListingStatus;
 use App\Models\Category;
 use App\Models\Listing;
+use App\Models\Municipality;
+use App\Models\Region;
+use App\Models\Settlement;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Support\Facades\Config;
@@ -259,13 +262,13 @@ it('requires authentication for the member area', function (string $route) {
 // -------------------------------------------------------------- geo lookup
 
 it('returns only the settlements of the requested region', function () {
-    $sofia = App\Models\Region::factory()->create(['slug' => 'sofia-grad']);
-    $sofiaMuni = App\Models\Municipality::factory()->create(['region_id' => $sofia->id]);
-    App\Models\Settlement::factory()->create(['municipality_id' => $sofiaMuni->id, 'name' => 'София']);
+    $sofia = Region::factory()->create(['slug' => 'sofia-grad']);
+    $sofiaMuni = Municipality::factory()->create(['region_id' => $sofia->id]);
+    Settlement::factory()->create(['municipality_id' => $sofiaMuni->id, 'name' => 'София']);
 
-    $varna = App\Models\Region::factory()->create(['slug' => 'varna']);
-    $varnaMuni = App\Models\Municipality::factory()->create(['region_id' => $varna->id]);
-    App\Models\Settlement::factory()->create(['municipality_id' => $varnaMuni->id, 'name' => 'Варна']);
+    $varna = Region::factory()->create(['slug' => 'varna']);
+    $varnaMuni = Municipality::factory()->create(['region_id' => $varna->id]);
+    Settlement::factory()->create(['municipality_id' => $varnaMuni->id, 'name' => 'Варна']);
 
     $res = $this->getJson(route('regions.settlements', 'sofia-grad'))->assertOk();
 
