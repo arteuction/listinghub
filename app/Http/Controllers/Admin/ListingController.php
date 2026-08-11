@@ -12,8 +12,8 @@ use App\Http\Requests\Admin\ListingRequest;
 use App\Models\Category;
 use App\Models\CustomField;
 use App\Models\Listing;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -98,9 +98,14 @@ class ListingController extends Controller
     }
 
     /** @return Collection<int, CustomField> */
-    private function fieldsFor(Category $category)
+    private function fieldsFor(Category $category): Collection
     {
-        return $category->customFields()->orderBy('sort_order')->orderBy('id')->get();
+        // The HasMany relation is declared without generics, so ->get() widens
+        // to Collection<int, Model>; state the element type here.
+        /** @var Collection<int, CustomField> $fields */
+        $fields = $category->customFields()->orderBy('sort_order')->orderBy('id')->get();
+
+        return $fields;
     }
 
     /**

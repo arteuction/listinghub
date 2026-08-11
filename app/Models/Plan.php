@@ -9,6 +9,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property BillingInterval $interval
+ * @property int $price_minor
+ * @property bool $is_featured
+ * @property bool $is_active
+ */
 class Plan extends Model
 {
     use HasFactory;

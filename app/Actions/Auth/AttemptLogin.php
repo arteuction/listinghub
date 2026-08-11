@@ -32,13 +32,21 @@ final class AttemptLogin
     {
         // Portable, case-insensitive email match (SQLite is case-sensitive on
         // `=`, MySQL collation is not — normalise both sides with lower()).
+        // The annotation states the nullability that whereRaw() loses for the
+        // analyser: an unknown email legitimately yields null here.
+        /** @var User|null $user */
         $user = User::query()
             ->whereRaw('lower(email) = ?', [Str::lower($email)])
             ->first();
 
         // Always run one password check (dummy hash when no user) — constant-ish
         // time so an unknown email is indistinguishable from a wrong password.
-        $passwordOk = Hash::check($password, $user?->password ?? self::DUMMY_HASH);
+        //
+        // `->` rather than `?->` is deliberate and safe: `??` reads the left
+        // side with isset semantics, so a null $user yields the dummy hash with
+        // no warning, exactly as the nullsafe form did. Do not "restore" the
+        // nullsafe — Larastan reads $user as non-null and would flag it again.
+        $passwordOk = Hash::check($password, $user->password ?? self::DUMMY_HASH);
 
         if ($user === null || ! $passwordOk || $user->status !== UserStatus::Active) {
             return false;

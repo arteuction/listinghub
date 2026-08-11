@@ -1,78 +1,27 @@
-# Larastan baseline — iteration 3.2.1 (Quality & Parity Baseline).
+# Larastan baseline.
 #
-# These are PRE-EXISTING findings from the first static-analysis run over code
-# that had never been analysed. They are recorded here so the gate is active
-# immediately: any NEW error fails the build, while this known set is burned
-# down incrementally.
+# Deliberately EMPTY. All 13 findings recorded in 3.2.1 were fixed at the
+# source; none were suppressed.
 #
-# Entries are matched by identifier + path rather than by exact message, so the
-# baseline stays readable and does not break on message wording changes.
+#   - @property annotations on CustomField, Plan, Listing and User declare the
+#     attributes whose runtime type comes from casts(); Larastan resolves model
+#     properties from annotations, not from the casts array.
+#   - SetLocale narrows Auth::user() to the concrete model before reading
+#     $locale, which Authenticatable does not declare.
+#   - ListingController::fieldsFor() states the element type that the
+#     generic-less HasMany relation loses through ->get().
+#   - UpdateCustomField extracts option values through a mixed-typed closure
+#     that narrows with is_array()/isset(), keeping malformed input on the
+#     CustomFieldConflict path instead of raising a TypeError.
+#   - AttemptLogin drops the nullsafe under `??`, which reads its left side
+#     with isset semantics and so handles a null user identically.
 #
-# Burn-down notes per group are inline. Nothing here is a silenced bug that is
-# known to be wrong at runtime — each is a typing gap, not a defect.
+# ENTRY FORMAT — every future entry must carry `message`, `identifier`, `count`
+# and `path` together. Matching on identifier + path alone lets a SECOND error
+# of the same kind in the same file pass unnoticed, which defeats the gate; the
+# count is what keeps the suppressed set fixed. phpstan.neon sets
+# reportUnmatchedIgnoredErrors to true, so an entry whose error has been fixed
+# fails the analysis and must be deleted rather than lingering.
 
 parameters:
-    ignoreErrors:
-        # Larastan types Builder::first() as non-nullable, so the defensive
-        # null handling around the user lookup reads as dead code. The null
-        # branch is real: an unknown email must reach the dummy-hash path.
-        -
-            identifier: nullsafe.neverNull
-            path: app/Actions/Auth/AttemptLogin.php
-        -
-            identifier: deadCode.unreachable
-            path: app/Actions/Auth/AttemptLogin.php
-
-        # `searchable` / `filterable` / `sortable` are real columns added by
-        # App\Support\ReshapeCustomFieldValues but are not declared on the
-        # model. Fix by adding @property annotations (or casts) to CustomField.
-        -
-            identifier: property.notFound
-            path: app/Actions/CustomFields/UpdateCustomField.php
-        -
-            identifier: property.notFound
-            path: app/Services/Search/ListingSearchQuery.php
-
-        # resolveType() returns the raw request value rather than the enum;
-        # the ?? chains then index a string. Needs a real enum cast.
-        -
-            identifier: return.type
-            path: app/Actions/CustomFields/UpdateCustomField.php
-        -
-            identifier: nullCoalesce.offset
-            path: app/Actions/CustomFields/UpdateCustomField.php
-
-        # Passes the raw options column (string|null) where the normalizer
-        # expects the decoded option array.
-        -
-            identifier: argument.type
-            path: app/Actions/Listings/SyncListingCustomFields.php
-
-        # Status is compared as a string before being handed to an enum-typed
-        # parameter; resolved once Listing::$status is annotated as the enum.
-        -
-            identifier: argument.type
-            path: app/Actions/Listings/TransitionListing.php
-        -
-            identifier: deadCode.unreachable
-            path: app/Actions/Listings/TransitionListing.php
-
-        # Route-model binding gives Model|null; fieldsFor() also returns an
-        # Eloquent collection where a Support collection is declared.
-        -
-            identifier: argument.type
-            path: app/Http/Controllers/Admin/ListingController.php
-        -
-            identifier: return.type
-            path: app/Http/Controllers/Admin/ListingController.php
-
-        # Auth::user() is typed as Authenticatable, which has no $locale.
-        -
-            identifier: nullsafe.neverNull
-            path: app/Http/Middleware/SetLocale.php
-
-        # Reads ->value off Plan::$interval, typed as string rather than the
-        # BillingInterval enum.
-        -
-            identifier: property.nonObject
-            path: app/Support/PlanSnapshot.php
+    ignoreErrors: []
