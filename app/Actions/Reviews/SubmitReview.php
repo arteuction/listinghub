@@ -8,6 +8,7 @@ use App\Enums\ModerationStatus;
 use App\Models\Listing;
 use App\Models\Review;
 use App\Models\User;
+use App\Services\Settings\SiteSettings;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -24,12 +25,15 @@ use Illuminate\Support\Facades\DB;
  */
 final class SubmitReview
 {
-    public function __construct(private readonly RecalculateListingRating $recalculate) {}
+    public function __construct(
+        private readonly RecalculateListingRating $recalculate,
+        private readonly SiteSettings $settings,
+    ) {}
 
     /** @param array<string, mixed> $data */
     public function execute(Listing $listing, User $author, array $data): Review
     {
-        $needsApproval = (bool) config('listinghub.moderation.reviews_require_approval', true);
+        $needsApproval = $this->settings->bool('reviews_require_approval');
 
         return DB::transaction(function () use ($listing, $author, $data, $needsApproval): Review {
             $review = Review::create([

@@ -18,6 +18,7 @@ use App\Models\Category;
 use App\Models\Listing;
 use App\Models\Region;
 use App\Models\User;
+use App\Services\Settings\SiteSettings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -105,11 +106,15 @@ class ListingController extends Controller
      * write: with moderation on, a draft becomes Pending; with it off, it is
      * auto-published.
      */
-    public function submit(Request $request, Listing $listing, TransitionListing $transition): RedirectResponse
-    {
+    public function submit(
+        Request $request,
+        Listing $listing,
+        TransitionListing $transition,
+        SiteSettings $settings,
+    ): RedirectResponse {
         $this->authorize('submit', $listing);
 
-        $needsApproval = (bool) config('listinghub.moderation.listings_require_approval', true);
+        $needsApproval = $settings->bool('listings_require_approval');
 
         try {
             $transition->handle(

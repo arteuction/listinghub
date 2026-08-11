@@ -5,9 +5,7 @@
 @section('content')
     <h1>Moderation queue</h1>
 
-    @if ($errors->any())
-        <div class="alert" role="alert">{{ $errors->first() }}</div>
-    @endif
+    @include('admin.partials.flash')
 
     <h2>Listings awaiting approval ({{ $listings->count() }})</h2>
     @if ($listings->isEmpty())
@@ -21,7 +19,12 @@
                         <td>{{ $listing->title }}</td>
                         <td>{{ $listing->owner?->email ?? '—' }}</td>
                         <td>{{ $listing->category?->name ?? '—' }}</td>
-                        <td><a href="{{ route('admin.listings.edit', $listing) }}">Review</a></td>
+                        <td>
+                            <a href="{{ route('admin.listings.edit', $listing) }}">Review</a>
+                            {{-- Approve/suspend act through the closed transition
+                                 map, the same one the member submit path uses. --}}
+                            @include('admin.partials.listing-transitions', ['listing' => $listing])
+                        </td>
                     </tr>
                 @endforeach
             </tbody>

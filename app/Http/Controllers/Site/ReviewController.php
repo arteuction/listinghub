@@ -11,6 +11,7 @@ use App\Http\Requests\Site\ReviewRequest;
 use App\Models\Listing;
 use App\Models\Review;
 use App\Models\User;
+use App\Services\Settings\SiteSettings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -27,8 +28,12 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class ReviewController extends Controller
 {
-    public function store(ReviewRequest $request, Listing $listing, SubmitReview $submit): RedirectResponse
-    {
+    public function store(
+        ReviewRequest $request,
+        Listing $listing,
+        SubmitReview $submit,
+        SiteSettings $settings,
+    ): RedirectResponse {
         abort_unless(
             $listing->status === ListingStatus::Published && $listing->published_at !== null,
             Response::HTTP_NOT_FOUND
@@ -53,7 +58,7 @@ class ReviewController extends Controller
 
         $submit->execute($listing, $user, $request->validated());
 
-        return back()->with('status', config('listinghub.moderation.reviews_require_approval', true)
+        return back()->with('status', $settings->bool('reviews_require_approval')
             ? 'Благодарим! Отзивът ви е изпратен за одобрение.'
             : 'Благодарим за отзива!');
     }

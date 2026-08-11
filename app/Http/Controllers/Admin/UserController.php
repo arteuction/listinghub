@@ -8,6 +8,7 @@ use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UserRequest;
 use App\Models\User;
+use App\Support\SearchTerm;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -32,10 +33,12 @@ class UserController extends Controller
 
         $users = User::query()
             ->when($term !== '', function ($query) use ($term): void {
-                $escaped = str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $term);
-                $query->where(function ($inner) use ($escaped): void {
-                    $inner->whereRaw("name LIKE ? ESCAPE '!'", ['%'.$escaped.'%'])
-                        ->orWhereRaw("email LIKE ? ESCAPE '!'", ['%'.$escaped.'%']);
+                // Through SearchTerm so an admin searching "иван" finds "Иван"
+                // on SQLite too, and so the escape convention has one home.
+                $pattern = SearchTerm::containsPattern($term);
+                $query->where(function ($inner) use ($pattern): void {
+                    $inner->whereRaw(SearchTerm::likeExpression('name'), [$pattern])
+                        ->orWhereRaw(SearchTerm::likeExpression('email'), [$pattern]);
                 });
             })
             ->with('roles')

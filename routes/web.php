@@ -2,12 +2,15 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\CustomFieldController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\LeadController as AdminLeadController;
 use App\Http\Controllers\Admin\ListingController;
 use App\Http\Controllers\Admin\ListingHoursController as AdminListingHoursController;
 use App\Http\Controllers\Admin\ModerationController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\UserController;
 /*
 |--------------------------------------------------------------------------
@@ -194,6 +197,29 @@ Route::prefix('admin')->name('admin.')
             Route::put('/{customField}', [CustomFieldController::class, 'update'])->name('update');
             Route::delete('/{customField}', [CustomFieldController::class, 'destroy'])->name('destroy');
         });
+
+        // Category CRUD (3.5.1). Destructive edges are guarded in the
+        // controller — a category with children or listings is not deletable.
+        Route::get('/categories', [AdminCategoryController::class, 'index'])->name('categories.index');
+        Route::get('/categories/create', [AdminCategoryController::class, 'create'])->name('categories.create');
+        Route::post('/categories', [AdminCategoryController::class, 'store'])->name('categories.store');
+        Route::get('/categories/{category}/edit', [AdminCategoryController::class, 'edit'])->name('categories.edit');
+        Route::put('/categories/{category}', [AdminCategoryController::class, 'update'])->name('categories.update');
+        Route::delete('/categories/{category}', [AdminCategoryController::class, 'destroy'])->name('categories.destroy');
+
+        // Every listing regardless of status, plus the status transitions
+        // (3.5.1). The public catalog can only ever show published rows.
+        Route::get('/listings', [ListingController::class, 'index'])->name('listings.index');
+        Route::post('/listings/{listing}/transition', [ListingController::class, 'transition'])->name('listings.transition');
+
+        // Enquiries across every listing (3.5.1).
+        Route::get('/leads', [AdminLeadController::class, 'index'])->name('leads.index');
+        Route::post('/leads/{lead}/read', [AdminLeadController::class, 'markRead'])->name('leads.read');
+        Route::delete('/leads/{lead}', [AdminLeadController::class, 'destroy'])->name('leads.destroy');
+
+        // Runtime settings (3.5.1) — only those that change behaviour.
+        Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
+        Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
 
         // Listing create/edit with custom fields (3.0C).
         Route::get('/categories/{category}/listings/create', [ListingController::class, 'create'])->name('listings.create');
