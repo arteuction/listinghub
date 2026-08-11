@@ -8,9 +8,10 @@ use App\Models\Listing;
 use App\Models\Municipality;
 use App\Models\Region;
 use App\Models\Settlement;
+use App\Services\Catalog\MapListingQuery;
 
 /*
-| 3.5.0 — Bulgaria Map & Geo Search. Tests for GET /api/catalog/map.
+| 3.4.1 — Bulgaria Map & Geo Search. Tests for GET /api/catalog/map.
 |
 | Key invariants:
 |   • Only Published listings appear.
@@ -217,4 +218,34 @@ it('feature properties contain url, title, settlement and exact flag', function 
     expect($feature)->not->toBeNull()
         ->and($feature['properties'])->toHaveKeys(['id', 'title', 'url', 'settlement', 'exact'])
         ->and($feature['properties']['url'])->toContain($listing->slug);
+});
+
+it('caps the feature count at the configured maximum', function () {
+    config()->set('listinghub.map.max_features', 2);
+
+    $s = settlementAt(42.7, 25.5);
+    publishedAt($s, lat: 42.71, lng: 25.51);
+    publishedAt($s, lat: 42.72, lng: 25.52);
+    publishedAt($s, lat: 42.73, lng: 25.53);
+
+    $res = $this->getJson('/api/catalog/map?bbox='.BG_BBOX);
+    $res->assertOk();
+
+    expect($res->json('features'))->toHaveCount(2);
+});
+
+it('falls back to the default cap when the configured value is unusable', function () {
+    foreach ([null, 0, -5, 'many'] as $bad) {
+        config()->set('listinghub.map.max_features', $bad);
+
+        expect(app(MapListingQuery::class)->maxFeatures())
+            ->toBe(MapListingQuery::DEFAULT_MAX_FEATURES);
+    }
+});
+
+it('clamps a configured cap above the hard ceiling', function () {
+    config()->set('listinghub.map.max_features', 1_000_000);
+
+    expect(app(MapListingQuery::class)->maxFeatures())
+        ->toBe(MapListingQuery::HARD_MAX_FEATURES);
 });

@@ -302,10 +302,19 @@ search via `GET /api/catalog/settlements`). The map itself
 the viewport to Bulgaria, GeoJSON clustering groups nearby markers, a popup shows the listing title
 + link (HTML-escaped client-side), and the bbox is written back into the browser URL so the view
 stays shareable. An always-in-DOM accessible list (`sr-only focus-within:not-sr-only`) gives
-keyboard/screen-reader users the same listings without touching the map canvas. Tile URL, feature
-cap, and viewport bounds are all `config('listinghub.map.*')` / `.env`-driven (`MAP_TILE_URL`,
-`MAP_MAX_FEATURES`) — OSM is the dev default; the docs flag that production should point at a
-provider with an SLA (OSM's tile policy explicitly disallows heavy unmanaged use).
+keyboard/screen-reader users the same listings without touching the map canvas. Tile URL and
+viewport bounds are `config('listinghub.map.*')` / `.env`-driven (`MAP_TILE_URL`) — OSM is the dev
+default; the docs flag that production should point at a provider with an SLA (OSM's tile policy
+explicitly disallows heavy unmanaged use).
+
+**Correction (follow-up pass):** this section originally listed the feature cap as `.env`-driven
+too. It was not — `MAP_MAX_FEATURES` and `listinghub.map.max_features` were defined but never
+read, and `MapListingQuery` hard-coded its `MAX_FEATURES = 1000` constant, so changing the
+variable did nothing. `MapListingQuery::maxFeatures()` now reads the config value, falls back to
+`DEFAULT_MAX_FEATURES` when it is absent, non-numeric or `< 1` (an unusable value must not yield
+an empty map), and clamps it to `HARD_MAX_FEATURES = 5000` so raising the variable cannot defeat
+the cap the endpoint depends on. Three tests cover it: the configured cap actually truncating the
+FeatureCollection, the fallback across `null`/`0`/`-5`/`'many'`, and the ceiling clamp.
 
 New composite indexes `(latitude, longitude)` on `listings` and `settlements` back the bbox range
 scan (migration `2026_08_11_000200_add_coordinate_indexes_for_map`).
