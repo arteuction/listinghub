@@ -42,6 +42,24 @@
         <label for="sort_order">Sort order</label>
         <input id="sort_order" name="sort_order" type="number" min="0" value="{{ old('sort_order', $product?->sort_order ?? 0) }}">
 
+        <fieldset>
+            <legend>Attributes (blank rows are skipped)</legend>
+            @php
+                $existingAttrs = old('attributes',
+                    $product?->attributeValues
+                        ->map(fn ($row) => ['name' => $row->attribute?->name, 'value' => $row->value])
+                        ->all() ?? []);
+            @endphp
+            @for ($i = 0; $i < max(count($existingAttrs) + 2, 4); $i++)
+                <div>
+                    <input name="attributes[{{ $i }}][name]" placeholder="Name"
+                           value="{{ $existingAttrs[$i]['name'] ?? '' }}" maxlength="100">
+                    <input name="attributes[{{ $i }}][value]" placeholder="Value"
+                           value="{{ $existingAttrs[$i]['value'] ?? '' }}" maxlength="255">
+                </div>
+            @endfor
+        </fieldset>
+
         <button type="submit" class="btn">{{ $product ? 'Save' : 'Create' }}</button>
     </form>
 @endsection
