@@ -12,6 +12,7 @@ dataset('legal_transitions', [
     'disapprove' => [ListingTransition::Disapprove, ListingStatus::Published, ListingStatus::Pending],
     'suspend' => [ListingTransition::Suspend, ListingStatus::Published, ListingStatus::Suspended],
     'restore' => [ListingTransition::Restore, ListingStatus::Suspended, ListingStatus::Published],
+    'request_changes' => [ListingTransition::RequestChanges, ListingStatus::Pending, ListingStatus::Draft],
 ]);
 
 it('maps each transition to the correct from/to', function (ListingTransition $t, ListingStatus $from, ListingStatus $to) {
@@ -19,8 +20,8 @@ it('maps each transition to the correct from/to', function (ListingTransition $t
         ->and($t->toStatus())->toBe($to);
 })->with('legal_transitions');
 
-it('exposes exactly six transitions and no Rejected/Archived', function () {
-    expect(ListingTransition::cases())->toHaveCount(6);
+it('exposes exactly seven transitions and no Rejected/Archived', function () {
+    expect(ListingTransition::cases())->toHaveCount(7);
 
     $statuses = array_map(fn ($c) => $c->value, ListingStatus::cases());
     expect($statuses)->not->toContain('rejected')
