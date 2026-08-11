@@ -88,13 +88,25 @@ class UpdateCustomField
         return $new;
     }
 
-    /** @param array<int,array{value:string,label?:string}> $newOptions */
+    /**
+     * The caller passes raw request input, so the elements are only *expected*
+     * to be option objects — normalizeOptions() is what enforces the shape,
+     * and it runs after this guard.
+     *
+     * @param  array<int, mixed>  $newOptions
+     */
     private function guardRemovedOptions(CustomField $field, array $newOptions): void
     {
-        // Both sides carry the normalised option shape, in which 'value'
-        // always exists — CustomFieldDefinition::normalizeOptions guarantees it.
-        $newValues = array_map(fn (array $o): string => (string) $o['value'], $newOptions);
-        $oldValues = array_map(fn (array $o): string => (string) $o['value'], $field->options ?? []);
+        // Stored options are not guaranteed to be well formed — a malformed
+        // element must reach the CustomFieldConflict path below, never raise a
+        // TypeError here. Taking `mixed` keeps that tolerance while giving the
+        // analyser a type it can narrow honestly.
+        $extractValue = static fn (mixed $option): string => is_array($option) && isset($option['value'])
+            ? (string) $option['value']
+            : '';
+
+        $newValues = array_map($extractValue, $newOptions);
+        $oldValues = array_map($extractValue, (array) ($field->options ?? []));
 
         foreach (array_diff($oldValues, $newValues) as $value) {
             if ($field->values()->where('value_string', $value)->exists()) {
