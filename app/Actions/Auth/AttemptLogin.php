@@ -32,6 +32,9 @@ final class AttemptLogin
     {
         // Portable, case-insensitive email match (SQLite is case-sensitive on
         // `=`, MySQL collation is not — normalise both sides with lower()).
+        // The annotation states the nullability that whereRaw() loses for the
+        // analyser: an unknown email legitimately yields null here.
+        /** @var User|null $user */
         $user = User::query()
             ->whereRaw('lower(email) = ?', [Str::lower($email)])
             ->first();

@@ -21,6 +21,7 @@ use Illuminate\Support\Carbon;
  *
  * @property ListingStatus $status
  * @property Carbon|null $published_at
+ * @property Category $category listings.category_id is NOT NULL
  */
 class Listing extends Model
 {

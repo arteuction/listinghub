@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
@@ -19,7 +20,11 @@ class SetLocale
     {
         $available = ['en']; // extended by the Language settings in later iterations.
 
-        $locale = $request->user()?->locale
+        // $request->user() is typed Authenticatable, which declares no $locale;
+        // narrow to the concrete model before reading it.
+        $user = $request->user();
+
+        $locale = ($user instanceof User ? $user->locale : null)
             ?? $request->session()->get('locale')
             ?? config('app.locale');
 

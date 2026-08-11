@@ -17,6 +17,8 @@ parameters:
     # setting for that situation (it is printed in the error tips).
     treatPhpDocTypesAsCertain: false
 
-    # The baseline is deliberately broad (by identifier + path, not by exact
-    # message), so entries fixed by the setting above do not fail the run.
-    reportUnmatchedIgnoredErrors: false
+    # A baseline entry whose error no longer occurs fails the analysis, so a
+    # fixed finding cannot linger as a silent suppression. This is what keeps
+    # the suppressed set honest — see phpstan-baseline.neon for the entry
+    # format the gate requires.
+    reportUnmatchedIgnoredErrors: true

@@ -91,8 +91,10 @@ class UpdateCustomField
     /** @param array<int,array{value:string,label?:string}> $newOptions */
     private function guardRemovedOptions(CustomField $field, array $newOptions): void
     {
-        $newValues = array_map(fn ($o) => (string) ($o['value'] ?? ''), $newOptions);
-        $oldValues = array_map(fn ($o) => (string) ($o['value'] ?? ''), (array) ($field->options ?? []));
+        // Both sides carry the normalised option shape, in which 'value'
+        // always exists — CustomFieldDefinition::normalizeOptions guarantees it.
+        $newValues = array_map(fn (array $o): string => (string) $o['value'], $newOptions);
+        $oldValues = array_map(fn (array $o): string => (string) $o['value'], $field->options ?? []);
 
         foreach (array_diff($oldValues, $newValues) as $value) {
             if ($field->values()->where('value_string', $value)->exists()) {

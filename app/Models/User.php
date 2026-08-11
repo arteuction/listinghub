@@ -13,6 +13,10 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 
+/**
+ * @property UserStatus $status
+ * @property string|null $locale
+ */
 class User extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory;
