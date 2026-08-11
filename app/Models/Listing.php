@@ -12,7 +12,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * Declares the attributes whose runtime type comes from casts() — without
+ * these, static analysis reads the raw column types (string) and rejects
+ * assigning the enum or the Carbon instance.
+ *
+ * @property ListingStatus $status
+ * @property Carbon|null $published_at
+ */
 class Listing extends Model
 {
     use HasFactory;
