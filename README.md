@@ -19,7 +19,7 @@ Platform model: **Variant 3 (prepared hybrid)** — shared catalog с nullable `
 | 3.2.1 | Quality & Parity Baseline — CI, Pint, Larastan, Gitleaks, Renovate, LEGACY_PARITY_MATRIX | ✅ done |
 | 3.2.2 | Architecture Gate — Deptrac, Lefthook, check-doc-status | ✅ done |
 | 3.2.3 | Bulgaria Geo Foundation — Region/Municipality/Settlement, BG-only geo, map config | ✅ done |
-| 3.3.0 | Public Marketplace — категории, локации, search/filter/sort, pagination, sitemap, карта | ⏳ planned |
+| 3.3.0 | Public Marketplace — категории, локации, search/filter/sort, pagination, sitemap | ✅ done |
 | 3.4.0 | Members & Ownership — регистрация, профили, owner CRUD, галерии, работно време | ⏳ planned |
 | 3.5.0 | Trust & Interaction — reviews, claims, leads, moderation, user management | ⏳ planned |
 | 3.6.0 | Commerce — plans, subscriptions, Stripe, invoices, refunds | ⏳ planned |
@@ -27,9 +27,9 @@ Platform model: **Variant 3 (prepared hybrid)** — shared catalog с nullable `
 | 3.8.0 | Data & Import — CSV importer, staged validation, BG geo updates | ⏳ planned |
 | 4.0.0 | Production Platform — atomic deploy, backup/restore, monitoring, smoke tests | ⏳ planned |
 
-This repository is generated **static-verified but not runtime-tested** — there is no
-PHP/Composer on the authoring machine. Run the checks in [`docs/INSTALL.md`](docs/INSTALL.md)
-on a PHP 8.3+ host.
+Every push runs the full gate in CI (see [`.github/workflows`](.github/workflows)):
+Pint, Larastan, Deptrac, Gitleaks, the Vite build, and the Pest suite against
+MySQL 8. For a local run see [`docs/INSTALL.md`](docs/INSTALL.md).
 
 **Hardening pass 2.6 applied** (see `docs/ARCHITECTURE.md` §15): Laravel-13-compatible
 dependency pins, `strict_types` in all PHP files, real `organization_id` FKs on all five

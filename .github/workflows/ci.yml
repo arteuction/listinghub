@@ -36,6 +36,26 @@ jobs:
       - name: Larastan (static analysis)
         run: vendor/bin/phpstan analyse --memory-limit=512M
 
+  frontend:
+    name: Vite build
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      # `npm ci` fails outright if package.json and package-lock.json disagree,
+      # which is what makes the asset build reproducible.
+      - name: Install JS dependencies
+        run: npm ci
+
+      - name: Build assets
+        run: npm run build
+
   secrets-scan:
     name: Gitleaks
     runs-on: ubuntu-24.04
