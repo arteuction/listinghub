@@ -23,8 +23,10 @@ Platform model: **Variant 3 (prepared hybrid)** — shared catalog с nullable `
 | 3.4.0 | Members & Ownership — регистрация, email verification, профили, owner CRUD, favourites, галерии | ✅ done |
 | 3.4.1 | Bulgaria Map & Geo Search — GeoJSON map endpoint, List/Map toggle, EKATTE autocomplete | ✅ done |
 | 3.4.2 | Listing detail completion — продукти/меню CRUD, работно време + изключения | ✅ done |
-| 3.5.0 | Trust & Interaction — reviews, claims, leads, moderation queue, user management | ✅ done |
-| 3.5.1 | Admin Panel — навигация, статистики, listing статуси, категории, запитвания, настройки | ✅ done |
+| 3.5.0 | Trust & Interaction — reviews, claims, leads, moderation queue, user management, админ панел (навигация, статистики, listing статуси + RequestChanges, категории, запитвания, настройки) | ✅ done |
+| 3.5.1 | Public Hour Exceptions — ефективно работно време (Europe/Sofia), „Днес“ на публичната страница | 🔁 in review |
+| 3.5.2 | Verified Claim Documents — content-sniffed upload, private disk, SHA-256, admin-only download | 🔁 in review |
+| 3.5.3 | Product Completion — attributes, gallery, публична продуктова страница | 🔁 in review |
 | 3.6.0 | Commerce — plans, subscriptions, Stripe, invoices, refunds | ⏳ planned |
 | 3.7.0 | Content & i18n — BG съдържание, CMS, SEO, FAQ, blog | ⏳ planned |
 | 3.8.0 | Data & Import — CSV importer, staged validation, BG geo updates | ⏳ planned |
