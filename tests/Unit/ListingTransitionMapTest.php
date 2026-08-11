@@ -6,12 +6,12 @@ use App\Enums\ListingStatus;
 use App\Enums\ListingTransition;
 
 dataset('legal_transitions', [
-    'submit'       => [ListingTransition::Submit, ListingStatus::Draft, ListingStatus::Pending],
+    'submit' => [ListingTransition::Submit, ListingStatus::Draft, ListingStatus::Pending],
     'auto_publish' => [ListingTransition::AutoPublish, ListingStatus::Draft, ListingStatus::Published],
-    'approve'      => [ListingTransition::Approve, ListingStatus::Pending, ListingStatus::Published],
-    'disapprove'   => [ListingTransition::Disapprove, ListingStatus::Published, ListingStatus::Pending],
-    'suspend'      => [ListingTransition::Suspend, ListingStatus::Published, ListingStatus::Suspended],
-    'restore'      => [ListingTransition::Restore, ListingStatus::Suspended, ListingStatus::Published],
+    'approve' => [ListingTransition::Approve, ListingStatus::Pending, ListingStatus::Published],
+    'disapprove' => [ListingTransition::Disapprove, ListingStatus::Published, ListingStatus::Pending],
+    'suspend' => [ListingTransition::Suspend, ListingStatus::Published, ListingStatus::Suspended],
+    'restore' => [ListingTransition::Restore, ListingStatus::Suspended, ListingStatus::Published],
 ]);
 
 it('maps each transition to the correct from/to', function (ListingTransition $t, ListingStatus $from, ListingStatus $to) {

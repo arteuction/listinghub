@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Support\ReshapeCustomFieldValues;
+use Illuminate\Database\ConnectionInterface;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
@@ -65,14 +66,14 @@ afterEach(function () {
     if (config('database.default') !== 'sqlite') {
         try {
             DB::connection('rcfb_admin')->statement('DROP DATABASE IF EXISTS '.RS_DB);
-        } catch (\Throwable) {
+        } catch (Throwable) {
         }
         DB::purge('rcfb_admin');
     }
     DB::purge(RS_CONN);
 });
 
-function rc(): \Illuminate\Database\ConnectionInterface
+function rc(): ConnectionInterface
 {
     return DB::connection(RS_CONN);
 }

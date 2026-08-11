@@ -24,7 +24,7 @@ final class CustomFieldValueNormalizer
 
     /**
      * @param  array<int, array{value:string,label?:string}>|null  $options  active select options
-     * @return array{column:string,value:string|bool}|null  null == empty (row should be deleted)
+     * @return array{column:string,value:string|bool}|null null == empty (row should be deleted)
      */
     public function normalize(CustomFieldType $type, mixed $raw, ?array $options = null): ?array
     {

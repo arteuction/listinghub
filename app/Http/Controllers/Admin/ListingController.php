@@ -13,6 +13,7 @@ use App\Models\Category;
 use App\Models\CustomField;
 use App\Models\Listing;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -96,14 +97,13 @@ class ListingController extends Controller
         return redirect()->route('admin.dashboard');
     }
 
-    /** @return \Illuminate\Support\Collection<int, CustomField> */
+    /** @return Collection<int, CustomField> */
     private function fieldsFor(Category $category)
     {
         return $category->customFields()->orderBy('sort_order')->orderBy('id')->get();
     }
 
     /**
-     * @param  mixed  $input
      * @return array<string, mixed>
      */
     private function customFieldInput(mixed $input): array

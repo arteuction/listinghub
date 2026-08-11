@@ -9,6 +9,7 @@ use App\Models\CustomField;
 use App\Models\CustomFieldValue;
 use App\Models\Listing;
 use App\Services\Search\ListingSearchQuery;
+use Illuminate\Support\Facades\DB;
 
 beforeEach(function () {
     $this->q = new ListingSearchQuery;
@@ -174,7 +175,7 @@ it('plans a filter+sort query without a Cartesian join and uses the index (MySQL
         'sort' => ['key' => 'area', 'direction' => 'asc'],
     ]);
 
-    $rows = \Illuminate\Support\Facades\DB::select('EXPLAIN '.$builder->toSql(), $builder->getBindings());
+    $rows = DB::select('EXPLAIN '.$builder->toSql(), $builder->getBindings());
 
     expect($rows)->not->toBeEmpty(); // planning succeeded
     // The correlated subquery on custom_field_values should use an index.

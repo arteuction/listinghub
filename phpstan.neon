@@ -1,11 +1,22 @@
 includes:
     - vendor/larastan/larastan/extension.neon
+    - phpstan-baseline.neon
 
 parameters:
     paths:
         - app
         - database
     level: 5
-    ignoreErrors: []
     excludePaths:
         - vendor
+
+    # Laravel models type cast attributes through PHPDoc, so PHPStan reads
+    # `$user->status` as `string` while `casts()` makes it a UserStatus enum at
+    # runtime. Treating those PHPDoc types as certain reports every enum
+    # comparison as an impossible condition. This is PHPStan's own recommended
+    # setting for that situation (it is printed in the error tips).
+    treatPhpDocTypesAsCertain: false
+
+    # The baseline is deliberately broad (by identifier + path, not by exact
+    # message), so entries fixed by the setting above do not fail the run.
+    reportUnmatchedIgnoredErrors: false

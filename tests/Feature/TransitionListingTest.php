@@ -18,12 +18,12 @@ it('performs all six legal transitions', function (ListingTransition $t, Listing
     expect($this->action->handle($listing, $t)->status)->toBe($to);
     expect($listing->fresh()->status)->toBe($to);
 })->with([
-    'submit'       => [ListingTransition::Submit, ListingStatus::Draft, ListingStatus::Pending],
+    'submit' => [ListingTransition::Submit, ListingStatus::Draft, ListingStatus::Pending],
     'auto_publish' => [ListingTransition::AutoPublish, ListingStatus::Draft, ListingStatus::Published],
-    'approve'      => [ListingTransition::Approve, ListingStatus::Pending, ListingStatus::Published],
-    'disapprove'   => [ListingTransition::Disapprove, ListingStatus::Published, ListingStatus::Pending],
-    'suspend'      => [ListingTransition::Suspend, ListingStatus::Published, ListingStatus::Suspended],
-    'restore'      => [ListingTransition::Restore, ListingStatus::Suspended, ListingStatus::Published],
+    'approve' => [ListingTransition::Approve, ListingStatus::Pending, ListingStatus::Published],
+    'disapprove' => [ListingTransition::Disapprove, ListingStatus::Published, ListingStatus::Pending],
+    'suspend' => [ListingTransition::Suspend, ListingStatus::Published, ListingStatus::Suspended],
+    'restore' => [ListingTransition::Restore, ListingStatus::Suspended, ListingStatus::Published],
 ]);
 
 it('rejects an illegal transition and leaves the database unchanged', function () {

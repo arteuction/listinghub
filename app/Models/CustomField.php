@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\CustomFieldType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -21,7 +22,7 @@ class CustomField extends Model
     protected function casts(): array
     {
         return [
-            'type' => \App\Enums\CustomFieldType::class,
+            'type' => CustomFieldType::class,
             'options' => 'array',
             'is_required' => 'boolean',
             'searchable' => 'boolean',

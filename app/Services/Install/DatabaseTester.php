@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Install;
 
+use Illuminate\Database\Connection;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use PDOException;
@@ -66,7 +67,7 @@ class DatabaseTester
      *
      * @return list<string>
      */
-    private function listTables(\Illuminate\Database\Connection $conn, string $driver): array
+    private function listTables(Connection $conn, string $driver): array
     {
         if (in_array($driver, ['mysql', 'mariadb'], true)) {
             return array_map(

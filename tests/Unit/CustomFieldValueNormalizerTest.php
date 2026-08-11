@@ -7,7 +7,7 @@ use App\Exceptions\CustomFieldConflict;
 use App\Support\CustomFieldValueNormalizer;
 
 beforeEach(function () {
-    $this->n = new App\Support\CustomFieldValueNormalizer;
+    $this->n = new CustomFieldValueNormalizer;
 });
 
 it('routes each type to its typed column', function () {
@@ -53,15 +53,15 @@ it('enforces select membership and url/email validity', function () {
 });
 
 it('rejects a non-scalar text value (P0-7)', function () {
-    expect(fn () => (new App\Support\CustomFieldValueNormalizer)->normalize(App\Enums\CustomFieldType::Text, ['a', 'b']))
-        ->toThrow(App\Exceptions\CustomFieldConflict::class);
+    expect(fn () => (new CustomFieldValueNormalizer)->normalize(CustomFieldType::Text, ['a', 'b']))
+        ->toThrow(CustomFieldConflict::class);
 });
 
 it('accepts http/https URLs but rejects other schemes (P0-7)', function () {
-    $n = new App\Support\CustomFieldValueNormalizer;
-    expect($n->normalize(App\Enums\CustomFieldType::Url, 'https://ok.example')['value'])->toBe('https://ok.example');
-    expect(fn () => $n->normalize(App\Enums\CustomFieldType::Url, 'ftp://x.example'))
-        ->toThrow(App\Exceptions\CustomFieldConflict::class);
-    expect(fn () => $n->normalize(App\Enums\CustomFieldType::Url, 'javascript:alert(1)'))
-        ->toThrow(App\Exceptions\CustomFieldConflict::class);
+    $n = new CustomFieldValueNormalizer;
+    expect($n->normalize(CustomFieldType::Url, 'https://ok.example')['value'])->toBe('https://ok.example');
+    expect(fn () => $n->normalize(CustomFieldType::Url, 'ftp://x.example'))
+        ->toThrow(CustomFieldConflict::class);
+    expect(fn () => $n->normalize(CustomFieldType::Url, 'javascript:alert(1)'))
+        ->toThrow(CustomFieldConflict::class);
 });

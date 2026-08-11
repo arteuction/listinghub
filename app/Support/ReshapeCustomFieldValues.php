@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Support;
 
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Schema\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use RuntimeException;
@@ -80,7 +81,7 @@ final class ReshapeCustomFieldValues
         $schema->dropIfExists('custom_field_values_old');
     }
 
-    private function ensureFlags(\Illuminate\Database\Schema\Builder $schema): void
+    private function ensureFlags(Builder $schema): void
     {
         if (! $schema->hasColumn('custom_fields', 'searchable')) {
             $schema->table('custom_fields', function (Blueprint $t): void {
@@ -91,7 +92,7 @@ final class ReshapeCustomFieldValues
         }
     }
 
-    private function createNext(\Illuminate\Database\Schema\Builder $schema): void
+    private function createNext(Builder $schema): void
     {
         $schema->create('custom_field_values_next', function (Blueprint $t): void {
             $t->id();
@@ -111,7 +112,7 @@ final class ReshapeCustomFieldValues
         });
     }
 
-    private function assertTypedShape(\Illuminate\Database\Schema\Builder $schema): void
+    private function assertTypedShape(Builder $schema): void
     {
         foreach (['custom_field_id', 'listing_id', 'value_text', 'value_string', 'value_decimal', 'value_boolean'] as $col) {
             if (! $schema->hasColumn('custom_field_values', $col)) {

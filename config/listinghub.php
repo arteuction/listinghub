@@ -23,7 +23,7 @@ return [
     // New member listings require admin approval before going public.
     'moderation' => [
         'listings_require_approval' => true,
-        'reviews_require_approval'  => true,
+        'reviews_require_approval' => true,
     ],
 
     // Variant 3 — prepared-hybrid boundary. Kept OFF: shared catalog only,
