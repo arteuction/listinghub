@@ -76,7 +76,7 @@ return new class extends Migration
             $table->string('ekatte', 10)->nullable()->unique()
                 ->comment('Official EKATTE code from the Bulgarian National Register');
             $table->string('type', 20)->default('city')
-                ->comment('city | town | village | quarter');
+                ->comment('town | village | monastery — the NSI EKATTE type set');
             $table->decimal('latitude', 10, 7)->nullable();
             $table->decimal('longitude', 10, 7)->nullable();
             $table->timestamps();

@@ -6,6 +6,7 @@ REQUIRED_DOCS=(
     "docs/ARCHITECTURE.md"
     "docs/LEGACY_PARITY_MATRIX.md"
     "docs/INSTALL.md"
+    "docs/BG_GEO_DATA.md"
 )
 
 ERRORS=0

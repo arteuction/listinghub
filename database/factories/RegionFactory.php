@@ -51,7 +51,9 @@ class RegionFactory extends Factory
     /** @return array<string, mixed> */
     public function definition(): array
     {
-        $name = fake()->randomElement(array_keys(self::REGIONS));
+        // unique(): regions.code carries a unique index, so two factory calls
+        // must never land on the same oblast.
+        $name = fake()->unique()->randomElement(array_keys(self::REGIONS));
         $code = self::REGIONS[$name];
 
         return [
