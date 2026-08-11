@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Enums\ListingStatus;
 use App\Models\Listing;
 use App\Models\Product;
 use App\Models\User;
