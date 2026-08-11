@@ -37,11 +37,13 @@ use App\Http\Controllers\Member\ListingController as MemberListingController;
 use App\Http\Controllers\Member\ListingHoursController;
 use App\Http\Controllers\Member\ListingMediaController;
 use App\Http\Controllers\Member\ProductController;
+use App\Http\Controllers\Member\ProductMediaController;
 use App\Http\Controllers\Member\ProfileController;
 use App\Http\Controllers\Site\ClaimController;
 use App\Http\Controllers\Site\HomeController;
 use App\Http\Controllers\Site\LeadController;
 use App\Http\Controllers\Site\ListingController as SiteListingController;
+use App\Http\Controllers\Site\ProductController as SiteProductController;
 use App\Http\Controllers\Site\ReviewController;
 use App\Http\Controllers\Site\SettlementLookupController;
 use App\Http\Controllers\Site\SitemapController;
@@ -56,6 +58,9 @@ Route::get('/listings', [SiteListingController::class, 'index'])->name('listings
 Route::get('/categories/{category:slug}', [SiteListingController::class, 'index'])->name('categories.show');
 Route::get('/regions/{region:slug}', [SiteListingController::class, 'index'])->name('regions.show');
 Route::get('/listings/{listing:slug}', [SiteListingController::class, 'show'])->name('listings.show');
+// Public product detail (3.5.3) — resolved inside the listing's scope, so a
+// slug from a different listing 404s (see Site\ProductController).
+Route::get('/listings/{listing:slug}/products/{productSlug}', [SiteProductController::class, 'show'])->name('listings.products.show');
 Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 
 // --- Enquiries (3.5.0) ---
@@ -134,6 +139,9 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::get('/{product}/edit', [ProductController::class, 'edit'])->name('edit');
             Route::put('/{product}', [ProductController::class, 'update'])->name('update');
             Route::delete('/{product}', [ProductController::class, 'destroy'])->name('destroy');
+            // Product gallery (3.5.3) — same verified pipeline as listing media.
+            Route::post('/{product}/media', [ProductMediaController::class, 'store'])->name('media.store');
+            Route::delete('/{product}/media/{asset}', [ProductMediaController::class, 'destroy'])->name('media.destroy');
         });
 
         // Working hours + date exceptions (3.4.2). The weekly schedule is a

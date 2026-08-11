@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\Products\CreateProduct;
+use App\Actions\Products\SyncProductAttributes;
 use App\Actions\Products\UpdateProduct;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ProductRequest;
@@ -33,9 +34,10 @@ class ProductController extends Controller
         return view('admin.products.form', ['listing' => $listing, 'product' => null]);
     }
 
-    public function store(ProductRequest $request, Listing $listing, CreateProduct $create): RedirectResponse
+    public function store(ProductRequest $request, Listing $listing, CreateProduct $create, SyncProductAttributes $syncAttributes): RedirectResponse
     {
-        $create->execute($listing, $request->validated());
+        $product = $create->execute($listing, $request->validated());
+        $syncAttributes->execute($product, $this->attributeRows($request));
 
         return redirect()->route('admin.listings.products.index', $listing);
     }
@@ -47,11 +49,12 @@ class ProductController extends Controller
         return view('admin.products.form', ['listing' => $listing, 'product' => $product]);
     }
 
-    public function update(ProductRequest $request, Listing $listing, Product $product, UpdateProduct $update): RedirectResponse
+    public function update(ProductRequest $request, Listing $listing, Product $product, UpdateProduct $update, SyncProductAttributes $syncAttributes): RedirectResponse
     {
         $this->assertOwned($listing, $product);
 
         $update->execute($product, $request->validated());
+        $syncAttributes->execute($product, $this->attributeRows($request));
 
         return redirect()->route('admin.listings.products.index', $listing);
     }
@@ -63,6 +66,15 @@ class ProductController extends Controller
         $product->delete();
 
         return redirect()->route('admin.listings.products.index', $listing);
+    }
+
+    /** @return list<array{name: string, value: string}> */
+    private function attributeRows(ProductRequest $request): array
+    {
+        /** @var list<array{name: string, value: string}> $rows */
+        $rows = array_values($request->validated()['attributes'] ?? []);
+
+        return $rows;
     }
 
     private function assertOwned(Listing $listing, Product $product): void

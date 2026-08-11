@@ -8,12 +8,17 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property string $name
+ * @property string $slug
+ */
 class Attribute extends Model
 {
     use HasFactory;
 
     protected $fillable = ['name', 'slug'];
 
+    /** @return HasMany<AttributeValue, $this> */
     public function values(): HasMany
     {
         return $this->hasMany(AttributeValue::class);

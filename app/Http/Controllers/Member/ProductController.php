@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Member;
 
 use App\Actions\Products\CreateProduct;
+use App\Actions\Products\SyncProductAttributes;
 use App\Actions\Products\UpdateProduct;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Member\ProductRequest;
@@ -42,11 +43,12 @@ class ProductController extends Controller
         return view('member.products.form', ['listing' => $listing, 'product' => null]);
     }
 
-    public function store(ProductRequest $request, Listing $listing, CreateProduct $create): RedirectResponse
+    public function store(ProductRequest $request, Listing $listing, CreateProduct $create, SyncProductAttributes $syncAttributes): RedirectResponse
     {
         $this->authorize('update', $listing);
 
-        $create->execute($listing, $request->validated());
+        $product = $create->execute($listing, $request->validated());
+        $syncAttributes->execute($product, $this->attributeRows($request));
 
         return redirect()->route('member.listings.products.index', $listing)
             ->with('status', 'Продуктът е добавен.');
@@ -60,12 +62,13 @@ class ProductController extends Controller
         return view('member.products.form', ['listing' => $listing, 'product' => $product]);
     }
 
-    public function update(ProductRequest $request, Listing $listing, Product $product, UpdateProduct $update): RedirectResponse
+    public function update(ProductRequest $request, Listing $listing, Product $product, UpdateProduct $update, SyncProductAttributes $syncAttributes): RedirectResponse
     {
         $this->authorize('update', $listing);
         $this->assertBelongsTo($product, $listing);
 
         $update->execute($product, $request->validated());
+        $syncAttributes->execute($product, $this->attributeRows($request));
 
         return redirect()->route('member.listings.products.index', $listing)
             ->with('status', 'Промените са запазени.');
@@ -80,6 +83,15 @@ class ProductController extends Controller
 
         return redirect()->route('member.listings.products.index', $listing)
             ->with('status', 'Продуктът е изтрит.');
+    }
+
+    /** @return list<array{name: string, value: string}> */
+    private function attributeRows(ProductRequest $request): array
+    {
+        /** @var list<array{name: string, value: string}> $rows */
+        $rows = array_values($request->validated()['attributes'] ?? []);
+
+        return $rows;
     }
 
     private function assertBelongsTo(Product $product, Listing $listing): void

@@ -74,7 +74,8 @@
                     <ul class="divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white">
                         @foreach ($listing->products as $product)
                             <li class="flex items-baseline justify-between gap-4 px-4 py-3">
-                                <span>{{ $product->name }}</span>
+                                <a href="{{ route('listings.products.show', [$listing->slug, $product->slug]) }}"
+                                   class="underline-offset-2 hover:underline">{{ $product->name }}</a>
                                 @if ($product->price_minor > 0)
                                     <span class="shrink-0 font-medium">
                                         {{ \App\Support\Money::of((int) $product->price_minor, $product->currency)->format() }}

@@ -58,8 +58,68 @@
                    class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
         </div>
 
+
+        {{-- Характеристики (3.5.3): пълна замяна при запис; редът се пази. --}}
+        <fieldset>
+            <legend class="block text-sm font-medium">Характеристики</legend>
+            <p class="mb-2 text-xs text-slate-500">Празните редове се пропускат.</p>
+            @php
+                $existingAttrs = old('attributes',
+                    $product?->attributeValues
+                        ->map(fn ($row) => ['name' => $row->attribute?->name, 'value' => $row->value])
+                        ->all() ?? []);
+            @endphp
+            <div class="space-y-2">
+                @for ($i = 0; $i < max(count($existingAttrs) + 2, 4); $i++)
+                    <div class="grid grid-cols-2 gap-2">
+                        <input name="attributes[{{ $i }}][name]" placeholder="Име (напр. Цвят)"
+                               value="{{ $existingAttrs[$i]['name'] ?? '' }}" maxlength="100"
+                               class="rounded-md border border-slate-300 px-3 py-2 text-sm">
+                        <input name="attributes[{{ $i }}][value]" placeholder="Стойност (напр. Червен)"
+                               value="{{ $existingAttrs[$i]['value'] ?? '' }}" maxlength="255"
+                               class="rounded-md border border-slate-300 px-3 py-2 text-sm">
+                    </div>
+                @endfor
+            </div>
+        </fieldset>
+
         <button type="submit" class="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
             {{ $product ? 'Запази' : 'Създай' }}
         </button>
     </form>
+
+    @if ($product)
+        {{-- Галерия на продукта (3.5.3) — същият проверен media pipeline. --}}
+        <section class="mt-8 max-w-xl">
+            <h2 class="mb-3 text-lg font-medium">Галерия</h2>
+
+            @if ($product->media->isNotEmpty())
+                <ul class="mb-4 grid grid-cols-3 gap-3">
+                    @foreach ($product->media as $asset)
+                        <li>
+                            <img src="{{ \Illuminate\Support\Facades\Storage::disk($asset->disk)->url($asset->path) }}"
+                                 alt="{{ $asset->alt_text ?: $product->name }}"
+                                 class="aspect-square w-full rounded-md border border-slate-200 object-cover">
+                            <form method="POST"
+                                  action="{{ route('member.listings.products.media.destroy', [$listing, $product, $asset]) }}">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="mt-1 text-xs text-red-700 underline">Премахни</button>
+                            </form>
+                        </li>
+                    @endforeach
+                </ul>
+            @endif
+
+            <form method="POST" enctype="multipart/form-data"
+                  action="{{ route('member.listings.products.media.store', [$listing, $product]) }}"
+                  class="space-y-2">
+                @csrf
+                <label for="product-images" class="block text-sm font-medium">Добави изображения</label>
+                <input id="product-images" name="images[]" type="file" multiple
+                       accept="image/jpeg,image/png,image/webp" class="w-full text-sm">
+                <button type="submit"
+                        class="rounded-md border border-slate-300 px-4 py-2 text-sm hover:bg-slate-100">Качи</button>
+            </form>
+        </section>
+    @endif
 @endsection

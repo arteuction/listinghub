@@ -40,8 +40,9 @@ class Product extends Model
         return $this->morphMany(MediaAsset::class, 'mediable')->orderBy('sort_order');
     }
 
+    /** @return HasMany<AttributeValue, $this> */
     public function attributeValues(): HasMany
     {
-        return $this->hasMany(AttributeValue::class);
+        return $this->hasMany(AttributeValue::class)->orderBy('sort_order')->orderBy('id');
     }
 }

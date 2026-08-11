@@ -24,6 +24,9 @@ final class ImageLimits
     /** Per listing, across the whole gallery. */
     public const MAX_PER_LISTING = 12;
 
+    /** Product galleries are smaller by design — the listing carries the main gallery. */
+    public const MAX_PER_PRODUCT = 6;
+
     /** Per single upload request. */
     public const MAX_PER_REQUEST = 6;
 

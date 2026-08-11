@@ -23,6 +23,10 @@ class ProductRequest extends FormRequest
             'currency' => ['nullable', 'string', 'size:3'],
             'status' => ['nullable', 'in:draft,published,suspended'],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
+            // Product features/specifications, ordered as written.
+            'attributes' => ['nullable', 'array', 'max:30'],
+            'attributes.*.name' => ['required', 'string', 'max:100'],
+            'attributes.*.value' => ['required', 'string', 'max:255'],
         ];
     }
 }
