@@ -6,9 +6,16 @@
 
 @section('content')
     <div class="mx-auto max-w-3xl">
-        <h1 class="mb-6 text-2xl font-semibold tracking-tight">
+        <h1 class="mb-1 text-2xl font-semibold tracking-tight">
             {{ $listing ? 'Редакция на обява' : 'Нова обява' }}
         </h1>
+
+        @if ($listing)
+            <p class="mb-6 flex gap-4 text-sm">
+                <a href="{{ route('member.listings.products.index', $listing) }}" class="text-slate-600 underline hover:text-slate-900">Продукти</a>
+                <a href="{{ route('member.listings.hours.edit', $listing) }}" class="text-slate-600 underline hover:text-slate-900">Работно време</a>
+            </p>
+        @endif
 
         @include('member.partials.flash')
 
