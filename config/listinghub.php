@@ -15,7 +15,7 @@ declare(strict_types=1);
 return [
 
     // Package version — stamped into the installer's pending marker.
-    'version' => '3.4.1',
+    'version' => '3.4.2',
 
     // Listing lifecycle statuses (mirrored by App\Enums\ListingStatus).
     'listing_statuses' => ['draft', 'pending', 'published', 'suspended'],

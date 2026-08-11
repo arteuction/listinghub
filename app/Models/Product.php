@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
+/** @property ProductStatus $status */
 class Product extends Model
 {
     use HasFactory;
@@ -28,6 +29,7 @@ class Product extends Model
         ];
     }
 
+    /** @return BelongsTo<Listing, $this> */
     public function listing(): BelongsTo
     {
         return $this->belongsTo(Listing::class);

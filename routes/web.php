@@ -5,6 +5,8 @@ declare(strict_types=1);
 use App\Http\Controllers\Admin\CustomFieldController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ListingController;
+use App\Http\Controllers\Admin\ListingHoursController as AdminListingHoursController;
+use App\Http\Controllers\Admin\ProductController as AdminProductController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -25,7 +27,9 @@ use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Member\FavoriteController;
 use App\Http\Controllers\Member\ListingController as MemberListingController;
+use App\Http\Controllers\Member\ListingHoursController;
 use App\Http\Controllers\Member\ListingMediaController;
+use App\Http\Controllers\Member\ProductController;
 use App\Http\Controllers\Member\ProfileController;
 use App\Http\Controllers\Site\HomeController;
 use App\Http\Controllers\Site\ListingController as SiteListingController;
@@ -103,6 +107,27 @@ Route::middleware(['auth', 'active'])->group(function () {
             ->name('listings.media.destroy');
         Route::delete('/listings/{listing}', [MemberListingController::class, 'destroy'])->name('listings.destroy');
 
+        // Products (3.4.2). Managing products is part of managing the listing
+        // — every action authorises against the parent listing, not a
+        // separate resource-level route gate (see ProductController).
+        Route::prefix('listings/{listing}/products')->name('listings.products.')->group(function () {
+            Route::get('/', [ProductController::class, 'index'])->name('index');
+            Route::get('/create', [ProductController::class, 'create'])->name('create');
+            Route::post('/', [ProductController::class, 'store'])->name('store');
+            Route::get('/{product}/edit', [ProductController::class, 'edit'])->name('edit');
+            Route::put('/{product}', [ProductController::class, 'update'])->name('update');
+            Route::delete('/{product}', [ProductController::class, 'destroy'])->name('destroy');
+        });
+
+        // Working hours + date exceptions (3.4.2). The weekly schedule is a
+        // single full-replacement PUT (SyncListingHours), not a per-day CRUD.
+        Route::prefix('listings/{listing}/hours')->name('listings.hours.')->group(function () {
+            Route::get('/', [ListingHoursController::class, 'edit'])->name('edit');
+            Route::put('/', [ListingHoursController::class, 'update'])->name('update');
+            Route::post('/exceptions', [ListingHoursController::class, 'storeException'])->name('exceptions.store');
+            Route::delete('/exceptions/{exception}', [ListingHoursController::class, 'destroyException'])->name('exceptions.destroy');
+        });
+
         Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
         Route::post('/favorites/{listing}', [FavoriteController::class, 'store'])->name('favorites.store');
         Route::delete('/favorites/{listing}', [FavoriteController::class, 'destroy'])->name('favorites.destroy');
@@ -149,6 +174,24 @@ Route::prefix('admin')->name('admin.')
         Route::post('/listings', [ListingController::class, 'store'])->name('listings.store');
         Route::get('/listings/{listing}/edit', [ListingController::class, 'edit'])->name('listings.edit');
         Route::put('/listings/{listing}', [ListingController::class, 'update'])->name('listings.update');
+
+        // Products for any listing (3.4.2).
+        Route::prefix('listings/{listing}/products')->name('listings.products.')->group(function () {
+            Route::get('/', [AdminProductController::class, 'index'])->name('index');
+            Route::get('/create', [AdminProductController::class, 'create'])->name('create');
+            Route::post('/', [AdminProductController::class, 'store'])->name('store');
+            Route::get('/{product}/edit', [AdminProductController::class, 'edit'])->name('edit');
+            Route::put('/{product}', [AdminProductController::class, 'update'])->name('update');
+            Route::delete('/{product}', [AdminProductController::class, 'destroy'])->name('destroy');
+        });
+
+        // Working hours + date exceptions for any listing (3.4.2).
+        Route::prefix('listings/{listing}/hours')->name('listings.hours.')->group(function () {
+            Route::get('/', [AdminListingHoursController::class, 'edit'])->name('edit');
+            Route::put('/', [AdminListingHoursController::class, 'update'])->name('update');
+            Route::post('/exceptions', [AdminListingHoursController::class, 'storeException'])->name('exceptions.store');
+            Route::delete('/exceptions/{exception}', [AdminListingHoursController::class, 'destroyException'])->name('exceptions.destroy');
+        });
     });
 
 /*

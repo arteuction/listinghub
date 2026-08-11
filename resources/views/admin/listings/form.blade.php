@@ -7,6 +7,14 @@
 @section('content')
     <h1>{{ $listing ? 'Edit' : 'New' }} listing — {{ $category->name }}</h1>
 
+    @if ($listing)
+        <p>
+            <a href="{{ route('admin.listings.products.index', $listing) }}">Products</a>
+            &middot;
+            <a href="{{ route('admin.listings.hours.edit', $listing) }}">Hours</a>
+        </p>
+    @endif
+
     @if ($errors->any())
         <div class="alert" role="alert">
             <ul>@foreach ($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>

@@ -345,3 +345,78 @@ DECIMAL(10,7))`, which forces numeric affinity and is valid on both SQLite and M
 23 new tests across `MapEndpointTest` (bbox validation, visibility — draft/pending/**suspended**
 excluded, coordinate resolution and fallback, category/region filter parity, feature shape) and
 `MapListToggleTest` (filter preservation across the List↔Map toggle, list/map result-set parity).
+
+---
+
+## 3.4.2 — Parity Closure: products & working hours CRUD
+
+| Gate | Result |
+|------|--------|
+| Pest suite — SQLite | ⚠️ **272 passed, 1 failed** (732 assertions) — pre-existing Cyrillic gap only |
+| Pest suite — MariaDB 11.4.5 | ✅ **273 passed** (736 assertions) |
+| PHPStan (Larastan, level 5) | ✅ No errors |
+| Pint | ✅ passed |
+| Deptrac | ✅ 0 violations |
+
+Closes the gap where `products`, `listing_hours` and `listing_hour_exceptions` had
+models, migrations and public read-only rendering, but no way for an owner or an
+admin to actually manage the data.
+
+**Products.** Full CRUD on both surfaces: `member.listings.products.*` and
+`admin.listings.products.*`. Writes go through `CreateProduct`/`UpdateProduct`
+actions, never the model directly. Two things are enforced structurally rather
+than by convention:
+
+- *Status ceiling.* `Member\ProductRequest` allows `draft|published`;
+  `Admin\ProductRequest` additionally allows `suspended`. Suspension is a
+  moderation act, so an owner cannot apply (or lift) it on their own row — the
+  member request rejects it at validation, before the action runs.
+- *Slug scope.* The schema's unique key is `[listing_id, slug]`, not `slug`, so
+  `CreateProduct::uniqueSlug()` probes for collisions **within the listing**.
+  Two different listings may each have a `standard-package` (covered by test).
+
+Authorisation for the member side runs against the **parent listing**
+(`ListingPolicy::update`), not the product row — otherwise `create()` would be
+unreachable for a listing with no products yet. Every action that names a
+specific product additionally asserts `product.listing_id === listing.id`, the
+same defence `ListingMediaController` uses: owning the listing must not let a
+caller pass an arbitrary product id from someone else's listing.
+
+**Working hours.** `SyncListingHours` is a **full replacement**, not a patch: the
+payload is the complete weekly state, and a day absent from it is deleted rather
+than left untouched. A partial update would let a stale "open" row survive after
+the owner cleared that day in the form, which is the failure mode that actually
+matters here (a business shown as open when it is closed). At most 7 rows, so
+delete-then-insert in one transaction beats a diffed upsert on clarity.
+`is_closed` forces `opens_at`/`closes_at` to NULL so a closed day cannot carry
+contradictory times.
+
+Validation (shared shape across `Member\` and `Admin\ListingHoursRequest`):
+both times present or neither, `closes_at` strictly after `opens_at`, and no
+duplicate `day_of_week` within one payload.
+
+**Hour exceptions** (holiday closures, one-off changes) default to
+`is_closed = true` — the common case — and require both times to opt into a
+still-open exception. Cross-listing exception ids 404.
+
+Both features are linked from the existing listing edit forms (member and
+admin) so they are reachable through the UI, not only by URL.
+
+**Type-safety fix carried in this iteration:** `Product` gained
+`@property ProductStatus $status` and a generic `BelongsTo<Listing, $this>` on
+`listing()`. Without them Larastan read `$product->status` as `string` (making
+`->value` an error) and could not resolve `$product->listing->user_id` in
+`ProductPolicy` — the same class of annotation gap fixed for the geo models in
+3.4.1, and the reason the repo keeps an empty Larastan baseline rather than
+suppressing these.
+
+18 new tests across `ListingProductTest` (member CRUD, cross-listing id
+rejection, member-cannot-suspend, admin-can-suspend, per-listing slug scope,
+stranger lockout on every verb) and `ListingHoursTest` (full-replacement
+semantics including the dropped-day case, all three validation rules, exception
+create/delete, cross-listing 404, stranger lockout).
+
+One test-portability note worth keeping: `TIME` columns normalise differently
+per driver — MySQL/MariaDB always return `H:i:s`, SQLite has no native TIME type
+and echoes back exactly what was written (`H:i`). The hour assertions compare the
+`H:i` prefix instead of the raw string so the same test is honest on both gates.

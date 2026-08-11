@@ -38,3 +38,10 @@ yarn.lock
 # usable with attribution, and the platform is unusable without it.
 # CodeCanyon reference archives must NEVER enter the repo
 *.zip
+
+# Playwright artefacts
+/storage/playwright
+/storage/playwright-report
+/test-results
+/storage/lighthouse
+/.lighthouseci
