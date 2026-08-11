@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Site;
 
 use App\Actions\Claims\SubmitClaim;
-use App\Exceptions\InvalidClaimDocument;
 use App\Enums\ListingStatus;
 use App\Enums\ModerationStatus;
+use App\Exceptions\InvalidClaimDocument;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Site\ClaimRequest;
 use App\Models\Listing;
