@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Settlement;
+use App\Support\SearchTerm;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -27,13 +28,11 @@ class SettlementSearchController extends Controller
                 ->header('Cache-Control', 'public, max-age=0');
         }
 
-        $escaped = str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $q);
-
         $rows = Settlement::query()
             ->with('municipality.region')
             ->whereNotNull('latitude')
             ->whereNotNull('longitude')
-            ->whereRaw("name LIKE ? ESCAPE '!'", ['%'.$escaped.'%'])
+            ->whereRaw(SearchTerm::likeExpression('name'), [SearchTerm::containsPattern($q)])
             ->orderBy('name')
             ->limit(10)
             ->get(['id', 'name', 'slug', 'type', 'municipality_id']);
