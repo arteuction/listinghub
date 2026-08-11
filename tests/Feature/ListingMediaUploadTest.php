@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\Listing;
 use App\Models\MediaAsset;
 use App\Models\User;
+use App\Services\Media\ImageProcessor;
 use App\Support\ImageLimits;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Http\UploadedFile;
@@ -22,7 +23,7 @@ beforeEach(function () {
     @mkdir(storage_path('app'), 0777, true);
     touch(storage_path('app/installed.lock'));
     $this->seed(RoleSeeder::class);
-    Storage::fake(App\Services\Media\ImageProcessor::DISK);
+    Storage::fake(ImageProcessor::DISK);
 });
 
 afterEach(function () {
