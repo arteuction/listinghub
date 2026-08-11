@@ -24,8 +24,10 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
+      # --report-uncovered names the classes that sit outside every layer;
+      # without it a --fail-on-uncovered failure prints nothing actionable.
       - name: Deptrac analyse
-        run: vendor/bin/deptrac analyse --no-cache --fail-on-uncovered
+        run: vendor/bin/deptrac analyse --no-cache --fail-on-uncovered --report-uncovered
 
   doc-status:
     name: Documentation completeness

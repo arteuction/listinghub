@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Actions\Billing\RecordPayment;
 use App\Models\PaymentEvent;
+use App\Models\User;
 use Illuminate\Database\QueryException;
 
 it('rejects a duplicate (gateway, external_event_id) pair', function () {
@@ -25,9 +27,9 @@ it('allows the same external id across different gateways', function () {
 });
 
 it('assigns an idempotency_key uuid via the RecordPayment action', function () {
-    $user = \App\Models\User::factory()->create();
+    $user = User::factory()->create();
 
-    $payment = (new \App\Actions\Billing\RecordPayment)->handle([
+    $payment = (new RecordPayment)->handle([
         'user_id' => $user->id,
         'gateway' => 'stripe',
         'amount_minor' => 1500,

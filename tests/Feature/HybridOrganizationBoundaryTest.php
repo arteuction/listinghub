@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 use App\Models\Listing;
 use App\Models\Organization;
+use App\Models\Plan;
 use App\Models\Product;
+use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Schema;
@@ -30,11 +32,11 @@ it('enforces a real foreign key on all five boundary tables', function (string $
     // a non-existent organization_id must be rejected by the live FK.
     $model::factory()->create(['organization_id' => 999999]);
 })->with([
-    'users'         => [App\Models\User::class],
-    'listings'      => [App\Models\Listing::class],
-    'products'      => [App\Models\Product::class],
-    'plans'         => [App\Models\Plan::class],
-    'subscriptions' => [App\Models\Subscription::class],
+    'users' => [User::class],
+    'listings' => [Listing::class],
+    'products' => [Product::class],
+    'plans' => [Plan::class],
+    'subscriptions' => [Subscription::class],
 ])->throws(QueryException::class);
 
 it('creates shared-catalog records with a null organization_id', function () {

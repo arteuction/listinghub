@@ -2,8 +2,7 @@
 
 declare(strict_types=1);
 
-use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\Admin\CustomFieldController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -15,10 +14,10 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-use App\Http\Controllers\Admin\CustomFieldController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ListingController;
 use App\Http\Controllers\Auth\LoginController;
+use Illuminate\Support\Facades\Route;
 
 // Public landing (placeholder until the public layer iteration).
 Route::get('/', fn () => view('welcome'))->name('home');

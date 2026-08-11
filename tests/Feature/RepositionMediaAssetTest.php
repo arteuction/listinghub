@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Actions\Media\AttachMediaAsset;
 use App\Actions\Media\RepositionMediaAsset;
 use App\Models\Listing;
 use App\Models\MediaAsset;
@@ -119,7 +120,7 @@ it('rejects a target that no longer exists', function () {
 
 it('appends new assets at 1000, 2000, 3000 via AttachMediaAsset', function () {
     $listing = Listing::factory()->create();
-    $attach = new \App\Actions\Media\AttachMediaAsset;
+    $attach = new AttachMediaAsset;
 
     $positions = [];
     for ($i = 0; $i < 3; $i++) {

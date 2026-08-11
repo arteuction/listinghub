@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Services\Install;
 
-use App\Support\InstallationState;
+use App\Enums\UserStatus;
 use App\Models\User;
+use App\Support\InstallationState;
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
@@ -116,7 +118,7 @@ class InstallManager
         // The seeder is run directly rather than via `migrate --seed`, because
         // the `db:seed` command is not registered in a web/HTTP request context.
         Artisan::call('migrate', ['--force' => true]);
-        app(\Database\Seeders\DatabaseSeeder::class)->setContainer(app())->run();
+        app(DatabaseSeeder::class)->setContainer(app())->run();
 
         $verified = false;
 
@@ -144,7 +146,7 @@ class InstallManager
             // REPEATABLE-READ snapshot and spatie guard/cache pitfalls that a
             // post-commit global query is subject to.
             // status may be cast to the UserStatus enum — compare on its value.
-            $statusValue = $user->status instanceof \App\Enums\UserStatus
+            $statusValue = $user->status instanceof UserStatus
                 ? $user->status->value
                 : (string) $user->status;
 

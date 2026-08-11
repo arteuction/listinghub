@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\UserStatus;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -30,7 +31,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'status' => \App\Enums\UserStatus::class,
+            'status' => UserStatus::class,
         ];
     }
 
@@ -61,6 +62,6 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function isSuspended(): bool
     {
-        return $this->status === \App\Enums\UserStatus::Suspended;
+        return $this->status === UserStatus::Suspended;
     }
 }

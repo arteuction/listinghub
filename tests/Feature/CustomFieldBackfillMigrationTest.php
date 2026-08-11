@@ -6,6 +6,7 @@ use App\Enums\CustomFieldType;
 use App\Exceptions\CustomFieldConflict;
 use App\Models\Product;
 use App\Support\CustomFieldBackfill;
+use Illuminate\Database\ConnectionInterface;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
@@ -56,7 +57,7 @@ beforeEach(function () {
     });
 });
 
-function cfb(): \Illuminate\Database\ConnectionInterface
+function cfb(): ConnectionInterface
 {
     return DB::connection('cfb');
 }
