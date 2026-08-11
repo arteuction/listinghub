@@ -1,0 +1,64 @@
+{
+  "_comment": "Official BG geo dataset. Replace with verified EKATTE data. DO NOT commit real data here.",
+  "_version": "1.0.0",
+  "_source": "https://www.grao.bg/ekatte/ (EKATTE — National Register of Settlements)",
+  "country": {
+    "name": "България",
+    "iso2": "BG"
+  },
+  "regions": [
+    {
+      "name": "Благоевград",
+      "code": "BLG",
+      "lat": 42.0208,
+      "lng": 23.0949,
+      "municipalities": [
+        {
+          "name": "Банско",
+          "code": "BLG01",
+          "lat": 41.8381,
+          "lng": 23.4869,
+          "settlements": [
+            {
+              "name": "Банско",
+              "ekatte": "02676",
+              "type": "town",
+              "lat": 41.8381,
+              "lng": 23.4869
+            },
+            {
+              "name": "Добринище",
+              "ekatte": "21498",
+              "type": "village",
+              "lat": 41.8167,
+              "lng": 23.5667
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "София-град",
+      "code": "SOF",
+      "lat": 42.6977,
+      "lng": 23.3219,
+      "municipalities": [
+        {
+          "name": "Столична",
+          "code": "SOF01",
+          "lat": 42.6977,
+          "lng": 23.3219,
+          "settlements": [
+            {
+              "name": "София",
+              "ekatte": "68134",
+              "type": "city",
+              "lat": 42.6977,
+              "lng": 23.3219
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

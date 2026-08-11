@@ -1,0 +1,65 @@
+# ListingHub
+
+**Национална платформа за обяви — само България.**
+Laravel 13 · PHP 8.3+ · MySQL 8.
+
+Концептуален наследник на Directory Hub (CodeCanyon reference) — **оригинален код**,
+не копие на продукта. Вижте [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) за пълния дизайн
+и [`docs/LEGACY_PARITY_MATRIX.md`](docs/LEGACY_PARITY_MATRIX.md) за функционалния паритет.
+
+**Продуктово ограничение:** ListingHub е национална платформа само за България.
+Няма многоезично съдържание, международни адреси или избор на държава.
+
+Platform model: **Variant 3 (prepared hybrid)** — shared catalog с nullable `organization_id`.
+
+## Еволюционна карта
+
+| Версия | Обхват | Статус |
+|--------|--------|--------|
+| 3.2.1 | Quality & Parity Baseline — CI, Pint, Larastan, Gitleaks, Renovate, LEGACY_PARITY_MATRIX | ✅ done |
+| 3.2.2 | Architecture Gate — Deptrac, Lefthook, check-doc-status | ✅ done |
+| 3.2.3 | Bulgaria Geo Foundation — Region/Municipality/Settlement, BG-only geo, map config | ✅ done |
+| 3.3.0 | Public Marketplace — категории, локации, search/filter/sort, pagination, sitemap, карта | ⏳ planned |
+| 3.4.0 | Members & Ownership — регистрация, профили, owner CRUD, галерии, работно време | ⏳ planned |
+| 3.5.0 | Trust & Interaction — reviews, claims, leads, moderation, user management | ⏳ planned |
+| 3.6.0 | Commerce — plans, subscriptions, Stripe, invoices, refunds | ⏳ planned |
+| 3.7.0 | Content & i18n — BG съдържание, CMS, SEO, FAQ, blog | ⏳ planned |
+| 3.8.0 | Data & Import — CSV importer, staged validation, BG geo updates | ⏳ planned |
+| 4.0.0 | Production Platform — atomic deploy, backup/restore, monitoring, smoke tests | ⏳ planned |
+
+This repository is generated **static-verified but not runtime-tested** — there is no
+PHP/Composer on the authoring machine. Run the checks in [`docs/INSTALL.md`](docs/INSTALL.md)
+on a PHP 8.3+ host.
+
+**Hardening pass 2.6 applied** (see `docs/ARCHITECTURE.md` §15): Laravel-13-compatible
+dependency pins, `strict_types` in all PHP files, real `organization_id` FKs on all five
+boundary tables, business logic moved into Actions/Services/Support, currency-aware `Money`,
+installer gate extended to the API, and the standard config + Vite/Tailwind/Alpine setup.
+
+## What ships now (after consolidation pass 2.5)
+
+- **37 tables** across 14 migrations (users, geo, roles, catalog, listings, products, billing, reviews, settings, organizations, unified media).
+- **25 Eloquent models** with relationships, casts, and **10 status enums**.
+- **Integer money** everywhere (`*_minor` bigint + ISO 4217 `currency`) — no floats in the domain; `App\Support\Money` for display.
+- **Unified `media_assets`** — one polymorphic gallery for listings, products and reviews (replaces per-entity image tables).
+- **Idempotent billing** — payments carry a UUID `idempotency_key`; `payment_events` are unique per `(gateway, external_event_id)` with `attempts`/`last_error` observability.
+- **Immutable subscription snapshots** — plan slug/name/price/currency/interval frozen at purchase.
+- **12 factories + Pest tests** (hybrid-boundary, payment idempotency, config).
+- **Seeders:** roles/permissions (`admin`/`staff`/`member`) and starter plans — **no default admin account** (created during install with an operator-chosen password).
+- **Installer stub:** `/install` welcome + server-requirements check, self-locking via `storage/app/installed.lock`.
+
+## Security posture (vs. the reviewed original)
+
+- No seeded default credentials.
+- `.env.example` ships with an **empty** `APP_KEY`.
+- No open utility routes; no `.env` echoed to the browser.
+- Optional license check is HTTPS-only with the key sourced from `.env`.
+
+## Quick start (on a PHP 8.3+ host)
+
+```bash
+composer install
+cp .env.example .env
+php artisan key:generate
+# configure DB in .env, then browse to /install
+```

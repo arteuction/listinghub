@@ -1,0 +1,23 @@
+{
+    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    "extends": ["config:recommended"],
+    "packageRules": [
+        {
+            "matchManagers": ["composer"],
+            "groupName": "PHP dependencies",
+            "schedule": ["every weekend"]
+        },
+        {
+            "matchManagers": ["npm"],
+            "groupName": "JS dependencies",
+            "schedule": ["every weekend"]
+        },
+        {
+            "matchPackageNames": ["laravel/framework"],
+            "automerge": false,
+            "reviewers": ["team:maintainers"]
+        }
+    ],
+    "prConcurrentLimit": 5,
+    "branchPrefix": "renovate/"
+}

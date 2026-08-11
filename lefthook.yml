@@ -1,0 +1,28 @@
+pre-commit:
+  parallel: true
+  commands:
+    pint:
+      glob: "*.php"
+      run: vendor/bin/pint --test {staged_files}
+
+    gitleaks:
+      run: gitleaks protect --staged --no-banner -v
+
+commit-msg:
+  commands:
+    conventional:
+      run: |
+        MSG=$(cat {1})
+        if ! echo "$MSG" | grep -qE '^(feat|fix|chore|docs|refactor|test|ci|style|perf|build|revert)(\(.+\))?: .{3,}'; then
+          echo "Commit message must follow Conventional Commits format."
+          echo "  e.g.: feat(geo): add Bulgaria region model"
+          exit 1
+        fi
+
+pre-push:
+  commands:
+    larastan:
+      run: vendor/bin/phpstan analyse --memory-limit=512M
+
+    deptrac:
+      run: vendor/bin/deptrac analyse --no-cache

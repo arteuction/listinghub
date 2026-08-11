@@ -1,0 +1,16 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Project-specific allowlist"
+paths = [
+    ".env.example",
+    "tests/",
+    "database/seeders/",
+]
+
+[[rules]]
+id = "laravel-app-key"
+description = "Laravel APP_KEY placeholder"
+regex = '''base64:[A-Za-z0-9+/]{43}='''
+allowlist.regexes = ['''base64:AAAA''']

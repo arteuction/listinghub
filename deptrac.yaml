@@ -1,0 +1,82 @@
+deptrac:
+  paths:
+    - app
+
+  layers:
+    - name: Controllers
+      collectors:
+        - type: directory
+          value: app/Http/Controllers/.*
+
+    - name: Requests
+      collectors:
+        - type: directory
+          value: app/Http/Requests/.*
+
+    - name: Actions
+      collectors:
+        - type: directory
+          value: app/Actions/.*
+
+    - name: Services
+      collectors:
+        - type: directory
+          value: app/Services/.*
+
+    - name: Models
+      collectors:
+        - type: directory
+          value: app/Models/.*
+
+    - name: Enums
+      collectors:
+        - type: directory
+          value: app/Enums/.*
+
+    - name: Support
+      collectors:
+        - type: directory
+          value: app/Support/.*
+
+    - name: Policies
+      collectors:
+        - type: directory
+          value: app/Policies/.*
+
+  ruleset:
+    Controllers:
+      - Requests
+      - Actions
+      - Services
+      - Models
+      - Enums
+      - Support
+
+    Requests:
+      - Enums
+      - Support
+
+    Actions:
+      - Models
+      - Enums
+      - Support
+      - Services
+
+    Services:
+      - Models
+      - Enums
+      - Support
+
+    Policies:
+      - Models
+      - Enums
+
+    Models:
+      - Enums
+      - Support
+
+    Enums: []
+
+    Support: []
+
+  skip_violations: {}
