@@ -8,6 +8,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $day_of_week
+ * @property string|null $opens_at
+ * @property string|null $closes_at
+ * @property bool $is_closed
+ */
 class ListingHour extends Model
 {
     use HasFactory;

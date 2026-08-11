@@ -16,6 +16,7 @@ use App\Models\Municipality;
 use App\Models\Region;
 use App\Models\Settlement;
 use App\Services\Catalog\PublicListingQuery;
+use App\Services\Hours\EffectiveHoursResolver;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -69,7 +70,7 @@ class ListingController extends Controller
         ]);
     }
 
-    public function show(Listing $listing, RecordListingView $recordView): View
+    public function show(Listing $listing, RecordListingView $recordView, EffectiveHoursResolver $hoursResolver): View
     {
         // A draft, pending or suspended listing must be indistinguishable from
         // one that does not exist.
@@ -88,6 +89,11 @@ class ListingController extends Controller
                 ->orderBy('sort_order')
                 ->orderBy('name'),
             'hours' => fn ($query) => $query->orderBy('day_of_week'),
+            // Only today's exception matters for the "Днес" line; loading the
+            // full exception history would grow without bound over a
+            // listing's lifetime.
+            'hourExceptions' => fn ($query) => $query
+                ->whereDate('date', EffectiveHoursResolver::today()->format('Y-m-d')),
             // Only APPROVED reviews are public; pending/rejected ones must not
             // leak, and they are also the only ones counted in rating_avg.
             'reviews' => fn ($query) => $query
@@ -100,6 +106,7 @@ class ListingController extends Controller
 
         return view('site.listings.show', [
             'listing' => $listing,
+            'todaySchedule' => $hoursResolver->for($listing),
             'related' => $this->catalog->build(['category' => $listing->category])
                 ->whereKeyNot($listing->getKey())
                 ->limit(4)

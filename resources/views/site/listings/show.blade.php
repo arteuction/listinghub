@@ -140,13 +140,31 @@
                 </dl>
             </section>
 
-            @if ($listing->hours->isNotEmpty())
+            @if ($listing->hours->isNotEmpty() || $todaySchedule !== null)
                 <section class="rounded-lg border border-slate-200 bg-white p-4">
                     <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Работно време</h2>
                     @php
                         // day_of_week is stored 0 = Sunday .. 6 = Saturday.
                         $dayNames = ['Неделя', 'Понеделник', 'Вторник', 'Сряда', 'Четвъртък', 'Петък', 'Събота'];
                     @endphp
+
+                    @if ($todaySchedule !== null)
+                        <p class="mb-3 rounded-md px-3 py-2 text-sm
+                                  {{ $todaySchedule->isClosed ? 'bg-red-50 text-red-800' : 'bg-emerald-50 text-emerald-800' }}">
+                            <span class="font-medium">Днес:</span>
+                            @if ($todaySchedule->isClosed)
+                                затворено
+                            @else
+                                {{ $todaySchedule->opensAt }}–{{ $todaySchedule->closesAt }}
+                            @endif
+                            @if ($todaySchedule->isException)
+                                <span class="block text-xs opacity-80">
+                                    Извънредно работно време{{ $todaySchedule->note ? ' — '.$todaySchedule->note : '' }}
+                                </span>
+                            @endif
+                        </p>
+                    @endif
+
                     <ul class="space-y-1 text-sm">
                         @foreach ($listing->hours as $hour)
                             <li class="flex justify-between gap-4">
@@ -155,7 +173,7 @@
                                     @if ($hour->is_closed)
                                         Затворено
                                     @else
-                                        {{ $hour->opens_at }}–{{ $hour->closes_at }}
+                                        {{ substr((string) $hour->opens_at, 0, 5) }}–{{ substr((string) $hour->closes_at, 0, 5) }}
                                     @endif
                                 </span>
                             </li>

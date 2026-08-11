@@ -89,11 +89,13 @@ class Listing extends Model
         return $this->hasMany(CustomFieldValue::class);
     }
 
+    /** @return HasMany<ListingHour, $this> */
     public function hours(): HasMany
     {
         return $this->hasMany(ListingHour::class);
     }
 
+    /** @return HasMany<ListingHourException, $this> */
     public function hourExceptions(): HasMany
     {
         return $this->hasMany(ListingHourException::class);
