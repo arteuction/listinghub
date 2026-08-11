@@ -165,8 +165,9 @@ sort        : { key, direction } | null
 7. **Никога** колона или `direction` от request-а не влизат директно в SQL:
    колоната се извежда от типа (матрица), `direction` се map-ва към фиксирано
    `'asc'`/`'desc'`.
-8. `text` search (`contains`) → `LIKE '%'||?||'%'`; escape-ва `%`/`_`; параметрът
-   винаги е bound (никаква конкатенация в SQL).
+8. `text` search (`contains`) → `LOWER(колона) LIKE ? ESCAPE '!'`; шаблонът се
+   сглобява само от `App\Support\SearchTerm` (case-fold + escape на `!`, `%`, `_`);
+   параметрът винаги е bound (никаква конкатенация в SQL).
 
 **Стойностна нормализация на входа:** същият typed cast като §2A преди
 сравнение (число → decimal, checkbox → boolean, select/url/email → string).
@@ -261,8 +262,11 @@ Backfill-ът минава през същата typed нормализация 
 - `MAX_FILTERS = 8` брои **нормализираните filter обекти** (след парсване).
 - **Един оператор на field key**; диапазон = `between` (не два отделни filter-а).
 - **Дублиран key** → отказ.
-- `contains`: escape-ват се `%`, `_` **и самият escape символ** (`ESCAPE '\'`);
-  binding-ът сам не решава wildcard семантиката.
+- `contains`: escape-ват се `%`, `_` **и самият escape символ** (`ESCAPE '!'` —
+  не `'\'`, който е синтактична грешка в MySQL string literal); сравнението
+  игнорира регистъра и за кирилица, защото и двете страни се fold-ват
+  (`LOWER(колона)` + `SearchTerm::fold()`); binding-ът сам не решава wildcard
+  семантиката.
 - **EXPLAIN тестове** не сравняват точен optimizer изход между SQLite и MariaDB;
   проверяват само: наличие на очаквания индекс, успешно планиране, и **липса на
   Cartesian join**.

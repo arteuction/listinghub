@@ -10,6 +10,7 @@ use App\Exceptions\InvalidSearchQuery;
 use App\Models\CustomField;
 use App\Models\Listing;
 use App\Support\CustomFieldValueNormalizer;
+use App\Support\SearchTerm;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 
@@ -192,12 +193,9 @@ final class ListingSearchQuery
 
             case 'contains':
                 $value = (string) $this->cast($type, $this->requireValue($filter));
-                // Escape LIKE wildcards + escape char, then declare ESCAPE '!'.
-                // '!' is used (not '\') because a backslash in a MySQL string
-                // literal escapes the quote — '\\' is a syntax error there, while
-                // '!' is literal on both SQLite and MySQL. Pattern is bound.
-                $escaped = str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $value);
-                $sub->whereRaw($col." LIKE ? ESCAPE '!'", ['%'.$escaped.'%']);
+                // Escaping and case-folding both live in SearchTerm; $col is
+                // built from field metadata above, never from request input.
+                $sub->whereRaw(SearchTerm::likeExpression($col), [SearchTerm::containsPattern($value)]);
                 break;
 
             default:
