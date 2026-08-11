@@ -8,6 +8,7 @@ use App\Enums\UserStatus;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -37,6 +38,14 @@ class User extends Authenticatable implements MustVerifyEmail
             'password' => 'hashed',
             'status' => UserStatus::class,
         ];
+    }
+
+    /** Listings this member has saved. */
+    public function favorites(): BelongsToMany
+    {
+        return $this->belongsToMany(Listing::class, 'favorites')
+            ->withTimestamps()
+            ->orderByPivot('created_at', 'desc');
     }
 
     public function organization(): BelongsTo

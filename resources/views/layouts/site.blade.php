@@ -43,6 +43,8 @@
                     @can('manage settings')
                         <a href="{{ route('admin.dashboard') }}" class="text-slate-600 hover:text-slate-900">Панел</a>
                     @endcan
+                    <a href="{{ route('member.listings.index') }}" class="text-slate-600 hover:text-slate-900">Моите обяви</a>
+                    <a href="{{ route('member.favorites.index') }}" class="text-slate-600 hover:text-slate-900">Любими</a>
                     <a href="{{ route('profile.edit') }}" class="text-slate-600 hover:text-slate-900">Профил</a>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf

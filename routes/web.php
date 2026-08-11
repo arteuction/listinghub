@@ -21,9 +21,12 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Member\FavoriteController;
+use App\Http\Controllers\Member\ListingController as MemberListingController;
 use App\Http\Controllers\Member\ProfileController;
 use App\Http\Controllers\Site\HomeController;
 use App\Http\Controllers\Site\ListingController as SiteListingController;
+use App\Http\Controllers\Site\SettlementLookupController;
 use App\Http\Controllers\Site\SitemapController;
 use Illuminate\Support\Facades\Route;
 
@@ -75,7 +78,29 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+
+    // --- Member area: own listings and favourites (3.4.0) ---
+    // Ownership is enforced by ListingPolicy inside the controller, not by the
+    // route: the route only proves the caller is an active, signed-in user.
+    Route::prefix('member')->name('member.')->group(function () {
+        Route::get('/listings', [MemberListingController::class, 'index'])->name('listings.index');
+        Route::get('/listings/create', [MemberListingController::class, 'create'])->name('listings.create');
+        Route::post('/listings', [MemberListingController::class, 'store'])->name('listings.store');
+        Route::get('/listings/{listing}/edit', [MemberListingController::class, 'edit'])->name('listings.edit');
+        Route::put('/listings/{listing}', [MemberListingController::class, 'update'])->name('listings.update');
+        Route::post('/listings/{listing}/submit', [MemberListingController::class, 'submit'])->name('listings.submit');
+        Route::delete('/listings/{listing}', [MemberListingController::class, 'destroy'])->name('listings.destroy');
+
+        Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
+        Route::post('/favorites/{listing}', [FavoriteController::class, 'store'])->name('favorites.store');
+        Route::delete('/favorites/{listing}', [FavoriteController::class, 'destroy'])->name('favorites.destroy');
+    });
 });
+
+// Public geo reference for the cascading location picker (see
+// SettlementLookupController: scoped per region, never the whole table).
+Route::get('/regions/{region:slug}/settlements', SettlementLookupController::class)
+    ->name('regions.settlements');
 
 // --- Admin (auth -> active -> permission:manage settings) ---
 Route::prefix('admin')->name('admin.')

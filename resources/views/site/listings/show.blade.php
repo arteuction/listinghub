@@ -88,6 +88,19 @@
         </article>
 
         <aside class="space-y-6">
+            @auth
+                @php $isFavorite = auth()->user()->favorites()->whereKey($listing->getKey())->exists(); @endphp
+                <form method="POST"
+                      action="{{ $isFavorite ? route('member.favorites.destroy', $listing) : route('member.favorites.store', $listing) }}">
+                    @csrf
+                    @if ($isFavorite) @method('DELETE') @endif
+                    <button type="submit"
+                            class="w-full rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium hover:bg-slate-100">
+                        {{ $isFavorite ? 'Премахни от любими' : 'Запази в любими' }}
+                    </button>
+                </form>
+            @endauth
+
             <section class="rounded-lg border border-slate-200 bg-white p-4">
                 <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Контакти</h2>
                 <dl class="space-y-2 text-sm">
