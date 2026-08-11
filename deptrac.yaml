@@ -43,6 +43,21 @@ deptrac:
         - type: directory
           value: app/Policies/.*
 
+    - name: Middleware
+      collectors:
+        - type: directory
+          value: app/Http/Middleware/.*
+
+    - name: Providers
+      collectors:
+        - type: directory
+          value: app/Providers/.*
+
+    - name: Exceptions
+      collectors:
+        - type: directory
+          value: app/Exceptions/.*
+
   ruleset:
     Controllers:
       - Requests
@@ -51,32 +66,61 @@ deptrac:
       - Models
       - Enums
       - Support
+      - Exceptions
 
+    # Controllers → Requests → Actions/Services → Models is the documented
+    # chain; a FormRequest may hand off to an Action but never touch a Model.
     Requests:
+      - Actions
       - Enums
       - Support
+      - Exceptions
 
     Actions:
       - Models
       - Enums
       - Support
       - Services
+      - Exceptions
 
     Services:
       - Models
       - Enums
       - Support
+      - Exceptions
 
     Policies:
       - Models
       - Enums
 
-    Models:
+    Middleware:
+      - Models
       - Enums
       - Support
+      - Services
+
+    Providers:
+      - Models
+      - Enums
+      - Support
+      - Services
+      - Policies
+
+    Models:
+      - Enums
 
     Enums: []
 
-    Support: []
+    # Support holds domain helpers (PlanSnapshot, CustomFieldBackfill,
+    # InstallationState), so it may read Models. The reverse edge does not
+    # exist — Models depend only on Enums — which keeps the graph acyclic.
+    Support:
+      - Models
+      - Enums
+      - Exceptions
+
+    # Domain exceptions name the enum cases they reject.
+    Exceptions:
+      - Enums
 
   skip_violations: {}

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Auth;
 
+use App\Actions\Auth\AttemptLogin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
@@ -12,7 +13,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 /**
- * Session login/logout. Thin: credential + status policy lives in LoginRequest.
+ * Session login/logout. Thin: credential + status policy lives in AttemptLogin,
+ * rate limiting in LoginRequest.
  * No registration, remember-me, password reset or verification here (3.0A).
  */
 class LoginController extends Controller
@@ -23,9 +25,9 @@ class LoginController extends Controller
         return view('auth.login');
     }
 
-    public function store(LoginRequest $request): RedirectResponse
+    public function store(LoginRequest $request, AttemptLogin $attempt): RedirectResponse
     {
-        $request->authenticate();
+        $request->authenticate($attempt);
 
         // Prevent session fixation on privilege change.
         $request->session()->regenerate();

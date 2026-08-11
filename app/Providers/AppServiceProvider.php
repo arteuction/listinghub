@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
-use App\Http\Middleware\EnsureInstalled;
+use App\Support\InstallationState;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\ServiceProvider;
 
@@ -22,7 +22,7 @@ class AppServiceProvider extends ServiceProvider
         // POST steps. Force file/array drivers for the whole pre-install flow,
         // regardless of .env. Once storage/app/installed.lock exists the
         // configured drivers take over (and the tables are present by then).
-        if (! EnsureInstalled::isInstalled()) {
+        if (! InstallationState::isInstalled()) {
             Config::set('session.driver', 'file');
             Config::set('cache.default', 'array');
             Config::set('queue.default', 'sync');

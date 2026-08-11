@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Support\InstallationState;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,7 +20,7 @@ class EnsureInstalled
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $installed = static::isInstalled();
+        $installed = InstallationState::isInstalled();
         $onInstaller = $request->is('install', 'install/*');
 
         if (! $installed) {
@@ -37,10 +38,5 @@ class EnsureInstalled
         }
 
         return $next($request);
-    }
-
-    public static function isInstalled(): bool
-    {
-        return file_exists(storage_path('app/installed.lock'));
     }
 }
