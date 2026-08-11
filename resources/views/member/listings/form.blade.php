@@ -170,6 +170,14 @@
                        class="text-sm text-slate-600 underline hover:text-slate-900">Отказ</a>
                 </div>
             </form>
+
+            {{-- Outside the main form: nested forms are invalid HTML, and the
+                 gallery needs a persisted listing to attach assets to. --}}
+            @if ($listing)
+                <div class="mt-6">
+                    @include('member.partials.gallery')
+                </div>
+            @endif
         @endif
     </div>
 @endsection
