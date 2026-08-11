@@ -159,7 +159,12 @@ it('lets the owner edit and soft-delete their own listing', function () {
 
     $this->actingAs($user)->delete(route('member.listings.destroy', $listing))->assertRedirect();
 
-    expect($listing->fresh())->toBeNull()
+    // fresh() runs newQueryWithoutScopes(), so it happily returns a trashed row
+    // — it cannot be used to prove a soft delete. Assert the actual contract:
+    // gone from ordinary queries, still present in the table.
+    $this->assertSoftDeleted($listing);
+
+    expect(Listing::query()->whereKey($listing->getKey())->exists())->toBeFalse()
         ->and(Listing::withTrashed()->whereKey($listing->getKey())->exists())->toBeTrue();
 });
 

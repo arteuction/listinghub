@@ -139,7 +139,10 @@ class ListingController extends Controller
     /** @return array<string, mixed> */
     private function formData(Request $request, ?Listing $listing): array
     {
-        $categoryId = $listing?->category_id ?? $request->query('category');
+        // `->` not `?->`: the `??` reads its left side with isset semantics, so
+        // a null $listing yields the query-string value with no warning. The
+        // nullsafe would be redundant, and Larastan rejects it as such.
+        $categoryId = $listing->category_id ?? $request->query('category');
         $category = $categoryId !== null
             ? Category::query()->where('is_active', true)->find($categoryId)
             : null;
