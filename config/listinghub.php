@@ -51,14 +51,14 @@ return [
     //   MapTiler (https://maptiler.com), Stadia Maps, Protomaps, etc.
     // For vector-tile styles set MAP_TILE_URL to a MapLibre style JSON URL.
     'map' => [
-        'tile_url'     => env('MAP_TILE_URL', 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'),
+        'tile_url' => env('MAP_TILE_URL', 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'),
         'max_features' => (int) env('MAP_MAX_FEATURES', 1000),
         // Bulgaria center [lng, lat] and default zoom.
-        'center'       => [25.5, 42.7],
+        'center' => [25.5, 42.7],
         'default_zoom' => 7,
         // Minimum zoom — stops the user zooming out past a whole-country view.
-        'min_zoom'     => 6,
+        'min_zoom' => 6,
         // Hard geographic envelope — the map cannot pan outside Bulgaria.
-        'bounds'       => [[22.3, 41.2], [28.7, 44.3]],
+        'bounds' => [[22.3, 41.2], [28.7, 44.3]],
     ],
 ];
