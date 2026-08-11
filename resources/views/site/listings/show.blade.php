@@ -314,12 +314,25 @@
                 </p>
 
                 <form method="POST" action="{{ route('listings.claims.store', $listing->slug) }}"
+                      enctype="multipart/form-data"
                       class="max-w-lg space-y-4 rounded-lg border border-slate-200 bg-white p-4">
                     @csrf
                     <div>
                         <label for="claim-message" class="block text-sm font-medium">Как можем да потвърдим, че обявата е ваша?</label>
                         <textarea id="claim-message" name="message" rows="4" required
                                   class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm">{{ old('message') }}</textarea>
+                    </div>
+
+                    <div>
+                        <label for="claim-document" class="block text-sm font-medium">
+                            Доказателство (по избор) — PDF, JPEG или PNG, до 10 MB
+                        </label>
+                        <input id="claim-document" name="document" type="file"
+                               accept="application/pdf,image/jpeg,image/png"
+                               class="mt-1 w-full text-sm">
+                        <p class="mt-1 text-xs text-slate-500">
+                            Файлът е видим само за администратора, който разглежда заявката.
+                        </p>
                     </div>
 
                     <button type="submit" class="rounded-md border border-slate-300 px-4 py-2 text-sm hover:bg-slate-100">

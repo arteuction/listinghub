@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
+use App\Http\Controllers\Admin\ClaimDocumentController;
 use App\Http\Controllers\Admin\CustomFieldController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\LeadController as AdminLeadController;
@@ -249,6 +250,9 @@ Route::prefix('admin')->name('admin.')
         Route::get('/moderation', [ModerationController::class, 'index'])->name('moderation.index');
         Route::post('/moderation/reviews/{review}', [ModerationController::class, 'decideReview'])->name('moderation.reviews.decide');
         Route::post('/moderation/claims/{claim}', [ModerationController::class, 'decideClaim'])->name('moderation.claims.decide');
+        // Proof-of-ownership document (3.5.2) — private disk, staff-only,
+        // served as an attachment; there is deliberately NO public URL.
+        Route::get('/claims/{claim}/document', [ClaimDocumentController::class, 'download'])->name('claims.document');
 
         // User management (3.5.0). Password changes are deliberately absent —
         // see UserController.
