@@ -41,7 +41,12 @@ final class AttemptLogin
 
         // Always run one password check (dummy hash when no user) — constant-ish
         // time so an unknown email is indistinguishable from a wrong password.
-        $passwordOk = Hash::check($password, $user?->password ?? self::DUMMY_HASH);
+        //
+        // `->` rather than `?->` is deliberate and safe: `??` reads the left
+        // side with isset semantics, so a null $user yields the dummy hash with
+        // no warning, exactly as the nullsafe form did. Do not "restore" the
+        // nullsafe — Larastan reads $user as non-null and would flag it again.
+        $passwordOk = Hash::check($password, $user->password ?? self::DUMMY_HASH);
 
         if ($user === null || ! $passwordOk || $user->status !== UserStatus::Active) {
             return false;

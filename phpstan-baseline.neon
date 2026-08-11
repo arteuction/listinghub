@@ -1,7 +1,7 @@
 # Larastan baseline.
 #
-# Of the 13 findings recorded in 3.2.1, twelve were fixed at the source rather
-# than suppressed:
+# Deliberately EMPTY. All 13 findings recorded in 3.2.1 were fixed at the
+# source; none were suppressed.
 #
 #   - @property annotations on CustomField, Plan, Listing and User declare the
 #     attributes whose runtime type comes from casts(); Larastan resolves model
@@ -11,27 +11,17 @@
 #   - ListingController::fieldsFor() states the element type that the
 #     generic-less HasMany relation loses through ->get().
 #   - UpdateCustomField extracts option values through a mixed-typed closure
-#     that narrows with is_array()/isset() instead of a null-coalesced offset.
+#     that narrows with is_array()/isset(), keeping malformed input on the
+#     CustomFieldConflict path instead of raising a TypeError.
+#   - AttemptLogin drops the nullsafe under `??`, which reads its left side
+#     with isset semantics and so handles a null user identically.
 #
-# ENTRY FORMAT — every entry must carry `message`, `identifier`, `count` and
-# `path` together. Matching on identifier + path alone lets a SECOND error of
-# the same kind in the same file pass unnoticed, which defeats the gate; the
+# ENTRY FORMAT — every future entry must carry `message`, `identifier`, `count`
+# and `path` together. Matching on identifier + path alone lets a SECOND error
+# of the same kind in the same file pass unnoticed, which defeats the gate; the
 # count is what keeps the suppressed set fixed. phpstan.neon sets
 # reportUnmatchedIgnoredErrors to true, so an entry whose error has been fixed
 # fails the analysis and must be deleted rather than lingering.
 
 parameters:
-    ignoreErrors:
-        # FALSE POSITIVE, not a typing gap. Larastan loses the nullability of
-        # Builder::first() across whereRaw(), so it reads $user as non-null and
-        # calls the nullsafe redundant. The null branch is real and load-bearing:
-        # an unknown email must reach the dummy-hash comparison, otherwise the
-        # response time reveals whether the address exists. A /** @var User|null */
-        # does not clear it, because treatPhpDocTypesAsCertain is false and the
-        # native inference wins. Removing the nullsafe would be a null-property
-        # access on an unknown email — the suppression is the correct call here.
-        -
-            message: '#^Using nullsafe property access "\?\->password" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-            identifier: nullsafe.neverNull
-            count: 1
-            path: app/Actions/Auth/AttemptLogin.php
+    ignoreErrors: []
