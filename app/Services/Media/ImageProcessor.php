@@ -102,8 +102,10 @@ final class ImageProcessor
             throw InvalidImageUpload::notAnImage();
         }
 
+        // getimagesizefromstring() always fills offsets 0-3 once it has not
+        // returned false, so no null-coalescing is needed here.
         [$width, $height] = [(int) $info[0], (int) $info[1]];
-        $type = $info[2] ?? null;
+        $type = $info[2];
 
         if (! in_array($type, self::ALLOWED_TYPES, true)) {
             throw InvalidImageUpload::unsupportedType();
