@@ -1,0 +1,78 @@
+{
+  "status": "passed",
+  "generated_at": "2026-08-11T00:00:00+03:00",
+  "sources": {
+    "nsi_ekatte": "https://www.nsi.bg/nrnm/ekatte/index",
+    "nsi_spatial": "https://www.nsi.bg/nrnm/spatial-data-files",
+    "grao": "https://www.grao.bg/tna/t41nm-15-06-2026_2.txt"
+  },
+  "geo": {
+    "regions": 28,
+    "municipalities": 265,
+    "settlements": 5256,
+    "settlement_types": {
+      "monastery": 2,
+      "town": 257,
+      "village": 4997
+    },
+    "spatial_version": [
+      "2025.1"
+    ],
+    "coordinate_bounds": {
+      "min_lat": 41.2761733,
+      "max_lat": 44.1933469,
+      "min_lng": 22.3865215,
+      "max_lng": 28.5782181
+    }
+  },
+  "population": {
+    "source_rows": 5137,
+    "matched_settlements": 5120,
+    "settlements_without_grao_row": 136,
+    "municipality_totals_validated": 265,
+    "unmatched_rows": 0,
+    "match_methods": {
+      "duplicate-name-occurrence": 5,
+      "exact": 5111,
+      "explicit-alias": 5,
+      "sofia-quarter-aggregate": 16
+    },
+    "aggregated_rows": 17
+  },
+  "outputs": {
+    "bg_geo_sha256": "cd97052b8db0fdd8a105d064ab9c15dea72b113bb432fbde0f6a452cf3060752",
+    "bg_population_sha256": "9264501daed481785d57cd3300646c95cd0c0a47a442aff0cef47cb380376e4e"
+  },
+  "known_records": {
+    "bansko": {
+      "name": "Банско",
+      "name_en": "Bansko",
+      "type_code": 1,
+      "municipality": "BLG01",
+      "region": "BLG",
+      "lat": 41.8384686,
+      "lng": 23.4888006,
+      "version": "2025.1"
+    },
+    "dobrinishte": {
+      "name": "Добринище",
+      "name_en": "Dobrinishte",
+      "type_code": 1,
+      "municipality": "BLG01",
+      "region": "BLG",
+      "lat": 41.8209994,
+      "lng": 23.5634454,
+      "version": "2025.1"
+    },
+    "sofia": {
+      "name": "София",
+      "name_en": "Sofia",
+      "type_code": 1,
+      "municipality": "SOF46",
+      "region": "SOF",
+      "lat": 42.6978858,
+      "lng": 23.3217258,
+      "version": "2025.1"
+    }
+  }
+}

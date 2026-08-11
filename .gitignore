@@ -19,7 +19,7 @@ yarn.lock
 /.vscode
 .DS_Store
 
-# BG geo dataset — real data is NOT committed; use bg-geo.json.example as template
-database/data/bg-geo.json
+# The BG geo dataset IS committed: it is official NSI EKATTE data, freely
+# usable with attribution, and the platform is unusable without it.
 # CodeCanyon reference archives must NEVER enter the repo
 *.zip

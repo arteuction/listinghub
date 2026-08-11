@@ -56,6 +56,25 @@ jobs:
       - name: Build assets
         run: npm run build
 
+  bg-datasets:
+    name: BG dataset validation
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Offline, stdlib-only. Blocks a geo update that breaks an EKATTE code,
+      # duplicates an identifier, or mismatches a municipality link.
+      - name: Validate committed BG datasets
+        run: |
+          python3 scripts/validate_bg_datasets.py \
+            --geo database/data/bg-geo.json \
+            --population database/data/bg-population/grao-2026-06-15.json
+
   secrets-scan:
     name: Gitleaks
     runs-on: ubuntu-24.04
