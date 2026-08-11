@@ -411,3 +411,79 @@ One test-portability note worth keeping: `TIME` columns normalise differently
 per driver — MySQL/MariaDB always return `H:i:s`, SQLite has no native TIME type
 and echoes back exactly what was written (`H:i`). The hour assertions compare the
 `H:i` prefix instead of the raw string so the same test is honest on both gates.
+
+---
+
+## 3.5.0 — Trust & Interaction: reviews, claims, leads, moderation, users
+
+| Gate | Result |
+|------|--------|
+| Pest suite — SQLite | ⚠️ **305 passed, 1 failed** (827 assertions) — pre-existing Cyrillic gap only |
+| Pest suite — MariaDB 11.4.5 | ✅ **306 passed** (831 assertions) |
+| PHPStan (Larastan, level 5) | ✅ No errors |
+| Pint | ✅ passed |
+| Deptrac | ✅ 0 violations |
+
+Turns the four remaining model-only domains into working features and adds the
+staff surfaces that govern them.
+
+**Reviews.** Public submission on the listing page, honouring
+`listinghub.moderation.reviews_require_approval`: on → Pending and invisible;
+off → Approved immediately. Three rules are enforced in the controller rather
+than left to the schema: only a Published listing can be reviewed (an
+unpublished one 404s, so a draft stays indistinguishable from nonexistent), an
+owner cannot review their own listing, and one review per user per listing (also
+a UNIQUE key — checked first so the user sees a validation message instead of a
+constraint violation).
+
+`rating_avg`/`rating_count` are **derived, never incremented**
+(`RecalculateListingRating`). A running counter drifts the instant a review is
+rejected, re-approved or deleted, with no way to detect it has; recomputing from
+the approved rows is O(reviews-per-listing) and always correct. `ModerateReview`
+therefore recomputes on *every* decision, including rejection — a moderator
+reversing an earlier approval must move the average back, which
+increment-on-approve could never do. Both directions are covered by tests.
+
+**Claims.** `SubmitClaim` only opens a moderation item; ownership moves
+exclusively in `ModerateClaim`, which locks the listing row (two moderators
+cannot race competing approvals) and, on approval, rejects every other pending
+claim for that listing — leaving them open would invite a second approval that
+silently re-transfers a listing already handed over.
+
+**Leads.** Anonymous by design: requiring an account to contact a business
+suppresses most genuine enquiries, so the route throttle rather than identity is
+the abuse control. Only published listings accept them. The owner's inbox is
+scoped by the parent listing, and marking read is idempotent so "when did this
+arrive" stays answerable.
+
+**Moderation queue.** One admin page for pending listings, reviews and claims.
+An unrecognised `decision` value is treated as a rejection, never defaulted to
+approval, so a malformed request cannot approve anything.
+
+**User management.** Search, edit name/email/status, assign roles. Two
+deliberate omissions and two guards:
+- *No password setting.* An admin able to silently take over an account leaves
+  no evidence for the account holder; password changes go through the user's own
+  reset flow. A test asserts a posted `password` field is ignored.
+- *Self-lockout guards.* An admin can neither suspend themselves nor drop their
+  own admin role — both are unrecoverable without database access. Suspending or
+  demoting a *different* admin remains allowed (also tested).
+
+**Type/architecture fixes carried here**, same class as 3.4.1/3.4.2 and fixed at
+the source rather than baselined: `@property ModerationStatus $status` on
+`Review`/`ListingClaim`, `@property Carbon|null $read_at` on `ListingLead`, and
+`BelongsTo<Related, $this>` generics across all three. Separately, deptrac caught
+a real layering violation — `Admin\UserRequest` referenced `App\Models\User` in a
+docblock, and the Requests layer must not depend on Models; it now reads the
+bound route model through the `Model` contract, since only the key is needed.
+
+33 new tests across `ReviewTest`, `LeadAndClaimTest` and
+`AdminUserManagementTest`.
+
+**Note on the local Pint signal:** on this Windows checkout (`core.autocrlf=true`,
+no `.gitattributes`) `pint --test` reports `line_ending` on ~80 committed files,
+sometimes with `unary_operator_spaces`/`braces_position` alongside. Converting a
+single such file to LF and re-running Pint makes it pass with zero fixers, which
+confirms all of them are CRLF-induced artifacts of the working copy, not repo
+content — CI checks out LF and is unaffected. Do not "fix" them; doing so
+produces a large spurious diff.

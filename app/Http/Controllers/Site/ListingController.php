@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Site;
 
 use App\Actions\Listings\RecordListingView;
 use App\Enums\ListingStatus;
+use App\Enums\ModerationStatus;
 use App\Enums\ProductStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Site\ListingIndexRequest;
@@ -87,6 +88,12 @@ class ListingController extends Controller
                 ->orderBy('sort_order')
                 ->orderBy('name'),
             'hours' => fn ($query) => $query->orderBy('day_of_week'),
+            // Only APPROVED reviews are public; pending/rejected ones must not
+            // leak, and they are also the only ones counted in rating_avg.
+            'reviews' => fn ($query) => $query
+                ->where('status', ModerationStatus::Approved->value)
+                ->with('user')
+                ->orderByDesc('id'),
         ]);
 
         $recordView->execute($listing);

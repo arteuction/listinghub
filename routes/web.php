@@ -6,7 +6,9 @@ use App\Http\Controllers\Admin\CustomFieldController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ListingController;
 use App\Http\Controllers\Admin\ListingHoursController as AdminListingHoursController;
+use App\Http\Controllers\Admin\ModerationController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Admin\UserController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -26,13 +28,17 @@ use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Member\FavoriteController;
+use App\Http\Controllers\Member\LeadController as MemberLeadController;
 use App\Http\Controllers\Member\ListingController as MemberListingController;
 use App\Http\Controllers\Member\ListingHoursController;
 use App\Http\Controllers\Member\ListingMediaController;
 use App\Http\Controllers\Member\ProductController;
 use App\Http\Controllers\Member\ProfileController;
+use App\Http\Controllers\Site\ClaimController;
 use App\Http\Controllers\Site\HomeController;
+use App\Http\Controllers\Site\LeadController;
 use App\Http\Controllers\Site\ListingController as SiteListingController;
+use App\Http\Controllers\Site\ReviewController;
 use App\Http\Controllers\Site\SettlementLookupController;
 use App\Http\Controllers\Site\SitemapController;
 use Illuminate\Support\Facades\Route;
@@ -47,6 +53,13 @@ Route::get('/categories/{category:slug}', [SiteListingController::class, 'index'
 Route::get('/regions/{region:slug}', [SiteListingController::class, 'index'])->name('regions.show');
 Route::get('/listings/{listing:slug}', [SiteListingController::class, 'show'])->name('listings.show');
 Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
+
+// --- Enquiries (3.5.0) ---
+// Anonymous by design (see CaptureLead): requiring an account to contact a
+// business would suppress most genuine enquiries, so the throttle — not
+// identity — is the abuse control here.
+Route::post('/listings/{listing:slug}/contact', [LeadController::class, 'store'])
+    ->middleware('throttle:10,1')->name('listings.leads.store');
 
 // --- Authentication (3.0A) ---
 // `guest` keeps an already-authenticated user from re-POSTing /login and
@@ -131,7 +144,20 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
         Route::post('/favorites/{listing}', [FavoriteController::class, 'store'])->name('favorites.store');
         Route::delete('/favorites/{listing}', [FavoriteController::class, 'destroy'])->name('favorites.destroy');
+
+        // Enquiry inbox for a listing the member owns (3.5.0).
+        Route::get('/listings/{listing}/leads', [MemberLeadController::class, 'index'])->name('listings.leads.index');
+        Route::post('/listings/{listing}/leads/{lead}/read', [MemberLeadController::class, 'markRead'])
+            ->name('listings.leads.read');
     });
+
+    // --- Reviews and ownership claims (3.5.0) ---
+    // Both require a signed-in, active account: a review moves a public score
+    // and a claim can transfer a listing, so neither may be anonymous.
+    Route::post('/listings/{listing:slug}/reviews', [ReviewController::class, 'store'])
+        ->middleware('throttle:10,1')->name('listings.reviews.store');
+    Route::post('/listings/{listing:slug}/claim', [ClaimController::class, 'store'])
+        ->middleware('throttle:5,1')->name('listings.claims.store');
 });
 
 // Public geo reference for the cascading location picker (see
@@ -192,6 +218,17 @@ Route::prefix('admin')->name('admin.')
             Route::post('/exceptions', [AdminListingHoursController::class, 'storeException'])->name('exceptions.store');
             Route::delete('/exceptions/{exception}', [AdminListingHoursController::class, 'destroyException'])->name('exceptions.destroy');
         });
+
+        // Moderation queue — pending listings, reviews and claims (3.5.0).
+        Route::get('/moderation', [ModerationController::class, 'index'])->name('moderation.index');
+        Route::post('/moderation/reviews/{review}', [ModerationController::class, 'decideReview'])->name('moderation.reviews.decide');
+        Route::post('/moderation/claims/{claim}', [ModerationController::class, 'decideClaim'])->name('moderation.claims.decide');
+
+        // User management (3.5.0). Password changes are deliberately absent —
+        // see UserController.
+        Route::get('/users', [UserController::class, 'index'])->name('users.index');
+        Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
+        Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
     });
 
 /*

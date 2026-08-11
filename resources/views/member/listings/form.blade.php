@@ -14,6 +14,7 @@
             <p class="mb-6 flex gap-4 text-sm">
                 <a href="{{ route('member.listings.products.index', $listing) }}" class="text-slate-600 underline hover:text-slate-900">Продукти</a>
                 <a href="{{ route('member.listings.hours.edit', $listing) }}" class="text-slate-600 underline hover:text-slate-900">Работно време</a>
+                <a href="{{ route('member.listings.leads.index', $listing) }}" class="text-slate-600 underline hover:text-slate-900">Запитвания</a>
             </p>
         @endif
 
