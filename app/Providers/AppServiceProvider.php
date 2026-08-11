@@ -7,6 +7,7 @@ namespace App\Providers;
 use App\Support\InstallationState;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -32,6 +33,15 @@ class AppServiceProvider extends ServiceProvider
             // Pin a stable cookie name for the whole pre-install flow.
             Config::set('session.cookie', 'listinghub_installer_session');
         }
+
+        // Password policy for every rule that uses Password::defaults().
+        // The breach check is a network call to the HaveIBeenPwned range API,
+        // so it is enabled only outside testing — otherwise the suite would be
+        // slow and would depend on an external service being reachable.
+        Password::defaults(fn () => Password::min(10)
+            ->letters()
+            ->numbers()
+            ->when(! app()->runningUnitTests(), fn (Password $rule) => $rule->uncompromised()));
 
         // Policies are auto-discovered by Laravel (App\Models\Foo ->
         // App\Policies\FooPolicy).

@@ -1,35 +1,36 @@
-<!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Sign in · {{ config('app.name', 'ListingHub') }}</title>
-    <style>
-        body { font-family: system-ui, sans-serif; background: #f8fafc; color: #0f172a; display: grid; place-items: center; min-height: 100vh; margin: 0; }
-        form { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 2rem; width: 320px; }
-        h1 { margin: 0 0 1rem; font-size: 1.4rem; }
-        label { display: block; margin: .8rem 0 .25rem; font-weight: 600; font-size: .9rem; }
-        input { width: 100%; padding: .5rem .6rem; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; }
-        button { margin-top: 1.2rem; width: 100%; padding: .6rem; background: #2563eb; color: #fff; border: 0; border-radius: 8px; font-size: 1rem; cursor: pointer; }
-        .alert { background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: .6rem .8rem; margin-bottom: 1rem; font-size: .9rem; }
-    </style>
-</head>
-<body>
-    <form method="POST" action="{{ url('/login') }}">
+@extends('layouts.auth')
+
+@section('title', 'Вход')
+@section('footer')
+    Нямате профил? <a href="{{ route('register') }}" class="font-medium text-slate-900 underline">Регистрирайте се</a>
+@endsection
+
+@section('content')
+    <form method="POST" action="{{ route('login') }}" class="space-y-4">
         @csrf
-        <h1>Sign in</h1>
 
-        @if ($errors->any())
-            <div class="alert" role="alert">{{ $errors->first() }}</div>
-        @endif
+        <div>
+            <label for="email" class="block text-sm font-medium">Имейл</label>
+            <input id="email" name="email" type="email" value="{{ old('email') }}" required autofocus
+                   autocomplete="username"
+                   class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 focus:border-slate-900 focus:ring-1 focus:ring-slate-900">
+        </div>
 
-        <label for="email">Email</label>
-        <input id="email" name="email" type="email" value="{{ old('email') }}" required autofocus autocomplete="username">
+        <div>
+            <label for="password" class="block text-sm font-medium">Парола</label>
+            <input id="password" name="password" type="password" required autocomplete="current-password"
+                   class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 focus:border-slate-900 focus:ring-1 focus:ring-slate-900">
+        </div>
 
-        <label for="password">Password</label>
-        <input id="password" name="password" type="password" required autocomplete="current-password">
+        <button type="submit"
+                class="w-full rounded-md bg-slate-900 px-4 py-2 font-medium text-white hover:bg-slate-700">
+            Вход
+        </button>
 
-        <button type="submit">Sign in</button>
+        <p class="text-center text-sm">
+            <a href="{{ route('password.request') }}" class="text-slate-600 underline hover:text-slate-900">
+                Забравена парола?
+            </a>
+        </p>
     </form>
-</body>
-</html>
+@endsection
