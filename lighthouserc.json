@@ -1,10 +1,16 @@
 {
+  "_comment": [
+    "Only PUBLIC, INDEXABLE pages are collected. /login and the rest of the auth",
+    "flow ship <meta name=robots content=noindex> on purpose, so a Lighthouse SEO",
+    "score for them measures the noindex tag rather than anything worth gating.",
+    "Their accessibility is covered by axe in the Playwright job, which checks the",
+    "same pages more precisely."
+  ],
   "ci": {
     "collect": {
       "url": [
         "http://127.0.0.1:8000/",
-        "http://127.0.0.1:8000/listings",
-        "http://127.0.0.1:8000/login"
+        "http://127.0.0.1:8000/listings"
       ],
       "numberOfRuns": 1,
       "settings": {

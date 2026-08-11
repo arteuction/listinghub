@@ -98,6 +98,10 @@
                     <input
                         id="lh-settlement-input"
                         type="search"
+                        {{-- role="combobox" is required, not decorative: an
+                             input's implicit role is `searchbox`, which does
+                             not permit aria-expanded (WCAG 4.1.2). --}}
+                        role="combobox"
                         placeholder="Търси населено място…"
                         autocomplete="off"
                         aria-autocomplete="list"

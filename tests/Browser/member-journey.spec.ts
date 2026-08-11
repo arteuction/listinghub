@@ -28,7 +28,7 @@ test('a visitor can register and lands on the verification notice', async ({ pag
     await page.goto('/register');
     await expectNoSeriousA11yViolations(page, 'register');
 
-    await page.getByLabel('Име').fill('Иван Петров');
+    await page.getByLabel('Име', { exact: true }).fill('Иван Петров');
     await page.getByLabel('Имейл').fill(uniqueEmail());
     const password = unbreachedPassword();
     await page.getByLabel('Парола', { exact: true }).fill(password);
@@ -43,7 +43,7 @@ test('a visitor can register and lands on the verification notice', async ({ pag
 test('a rejected registration announces the error rather than failing silently', async ({ page }) => {
     await page.goto('/register');
 
-    await page.getByLabel('Име').fill('Тест');
+    await page.getByLabel('Име', { exact: true }).fill('Тест');
     await page.getByLabel('Имейл').fill(uniqueEmail());
     // Too short and without digits — must fail the password policy.
     await page.getByLabel('Парола', { exact: true }).fill('short');
