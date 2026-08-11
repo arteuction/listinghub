@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -20,45 +19,50 @@ use Illuminate\Support\Facades\Schema;
  *
  * Rename path: states → regions, cities → municipalities, new settlements.
  * Listings are re-pointed from city_id → settlement_id.
+ *
+ * NOTE ON CONSTRAINT NAMES: MySQL keeps the ORIGINAL constraint name when a
+ * table is renamed, while Laravel's `dropForeign([$column])` derives the name
+ * from the CURRENT table name. Every constraint dropped after a rename is
+ * therefore named explicitly with its legacy name.
  */
 return new class extends Migration
 {
     public function up(): void
     {
         // ------------------------------------------------------------------ //
-        // 1. Regions (бивши states)                                           //
+        // 1. Regions (former states)                                          //
         // ------------------------------------------------------------------ //
         Schema::rename('states', 'regions');
 
         Schema::table('regions', function (Blueprint $table) {
-            // Drop old FK to countries; we keep country_id but rename nothing —
-            // the single BG record will always be referenced.
             $table->string('code', 10)->nullable()->after('name')
-                  ->comment('NUTS-3 or official BG region code');
+                ->comment('NUTS-3 or official BG region code');
             $table->decimal('latitude', 10, 7)->nullable()->after('code');
             $table->decimal('longitude', 10, 7)->nullable()->after('latitude');
             $table->json('boundary')->nullable()->after('longitude')
-                  ->comment('GeoJSON Polygon/MultiPolygon for the region boundary');
+                ->comment('GeoJSON Polygon/MultiPolygon for the region boundary');
         });
 
         // ------------------------------------------------------------------ //
-        // 2. Municipalities (бивши cities → renamed)                          //
+        // 2. Municipalities (former cities)                                   //
         // ------------------------------------------------------------------ //
         Schema::rename('cities', 'municipalities');
 
+        // Legacy name — the constraint was created while the table was `cities`.
         Schema::table('municipalities', function (Blueprint $table) {
-            // Rename FK column state_id → region_id.
-            // Drop old index/FK first, then rename, re-add constraint.
-            $table->dropForeign(['state_id']);
+            $table->dropForeign('cities_state_id_foreign');
+        });
+
+        Schema::table('municipalities', function (Blueprint $table) {
             $table->renameColumn('state_id', 'region_id');
         });
 
         Schema::table('municipalities', function (Blueprint $table) {
             $table->foreign('region_id')->references('id')->on('regions')->cascadeOnDelete();
             $table->string('code', 10)->nullable()->after('name')
-                  ->comment('EKATTE municipality code');
+                ->comment('EKATTE municipality code');
             $table->json('boundary')->nullable()->after('longitude')
-                  ->comment('GeoJSON Polygon/MultiPolygon for the municipality boundary');
+                ->comment('GeoJSON Polygon/MultiPolygon for the municipality boundary');
         });
 
         // ------------------------------------------------------------------ //
@@ -70,9 +74,9 @@ return new class extends Migration
             $table->string('name');
             $table->string('slug')->index();
             $table->string('ekatte', 10)->nullable()->unique()
-                  ->comment('Official EKATTE code from the Bulgarian National Register');
+                ->comment('Official EKATTE code from the Bulgarian National Register');
             $table->string('type', 20)->default('city')
-                  ->comment('city | town | village | quarter');
+                ->comment('city | town | village | quarter');
             $table->decimal('latitude', 10, 7)->nullable();
             $table->decimal('longitude', 10, 7)->nullable();
             $table->timestamps();
@@ -83,32 +87,21 @@ return new class extends Migration
         // ------------------------------------------------------------------ //
         // 4. Listings: swap city_id → settlement_id                           //
         // ------------------------------------------------------------------ //
+        // A municipality does not map onto any single settlement, so there is no
+        // correct automatic conversion: existing listings keep a NULL settlement
+        // and must be re-assigned against the BG dataset before publication.
         Schema::table('listings', function (Blueprint $table) {
-            // Add new column first (nullable so existing rows survive).
-            $table->foreignId('settlement_id')->nullable()
-                  ->after('city_id')
-                  ->constrained()->nullOnDelete();
+            $table->foreignId('settlement_id')->nullable()->after('city_id')
+                ->constrained()->nullOnDelete();
         });
-
-        // Migrate existing city_id values: create a stub settlement per city.
-        // In practice listings table is empty at this migration point,
-        // but the SQL is idempotent for safety.
-        DB::statement('
-            UPDATE listings l
-            JOIN municipalities m ON m.id = l.city_id
-            SET l.settlement_id = (
-                SELECT s.id FROM settlements s
-                WHERE s.municipality_id = m.id
-                LIMIT 1
-            )
-            WHERE l.city_id IS NOT NULL
-        ');
 
         Schema::table('listings', function (Blueprint $table) {
             $table->dropForeign(['city_id']);
-            $table->dropColumn('city_id');
-            // Update composite index.
             $table->dropIndex(['city_id', 'status']);
+            $table->dropColumn('city_id');
+        });
+
+        Schema::table('listings', function (Blueprint $table) {
             $table->index(['settlement_id', 'status']);
         });
 
@@ -123,17 +116,19 @@ return new class extends Migration
 
     public function down(): void
     {
-        // Restore users.country_id
         Schema::table('users', function (Blueprint $table) {
             $table->foreignId('country_id')->nullable()->constrained()->nullOnDelete();
         });
 
-        // Restore listings.city_id
         Schema::table('listings', function (Blueprint $table) {
             $table->dropIndex(['settlement_id', 'status']);
             $table->dropForeign(['settlement_id']);
             $table->dropColumn('settlement_id');
-            $table->foreignId('city_id')->nullable()->constrained('municipalities')->nullOnDelete();
+        });
+
+        Schema::table('listings', function (Blueprint $table) {
+            $table->foreignId('city_id')->nullable()->after('plan_id')
+                ->constrained('municipalities')->nullOnDelete();
             $table->index(['city_id', 'status']);
         });
 
@@ -142,19 +137,23 @@ return new class extends Migration
         Schema::table('municipalities', function (Blueprint $table) {
             $table->dropForeign(['region_id']);
             $table->dropColumn(['code', 'boundary']);
-            $table->renameColumn('region_id', 'state_id');
         });
 
         Schema::table('municipalities', function (Blueprint $table) {
-            $table->foreign('state_id')->references('id')->on('regions')->cascadeOnDelete();
+            $table->renameColumn('region_id', 'state_id');
         });
-
-        Schema::rename('municipalities', 'cities');
 
         Schema::table('regions', function (Blueprint $table) {
             $table->dropColumn(['code', 'latitude', 'longitude', 'boundary']);
         });
 
+        // Both tables must carry their original names before the legacy
+        // cities → states foreign key can be recreated.
         Schema::rename('regions', 'states');
+        Schema::rename('municipalities', 'cities');
+
+        Schema::table('cities', function (Blueprint $table) {
+            $table->foreign('state_id')->references('id')->on('states')->cascadeOnDelete();
+        });
     }
 };

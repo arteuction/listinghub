@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Install;
 
-use App\Http\Middleware\EnsureInstalled;
+use App\Support\InstallationState;
 use App\Models\User;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
@@ -16,7 +16,7 @@ use Spatie\Permission\PermissionRegistrar;
  * Owns installation state and the finalize sequence.
  *
  * Markers (all under storage/app, none contain secrets):
- *  - installed.lock       authoritative "installed" marker (EnsureInstalled)
+ *  - installed.lock       authoritative "installed" marker (InstallationState)
  *  - installation.pending recovery marker written before migrations
  *  - installation.running exclusive mutex so only one install POST runs
  */
@@ -39,7 +39,7 @@ class InstallManager
 
     public function isInstalled(): bool
     {
-        return EnsureInstalled::isInstalled();
+        return InstallationState::isInstalled();
     }
 
     /** Fingerprint of the DB target — no credentials, just where it points. */

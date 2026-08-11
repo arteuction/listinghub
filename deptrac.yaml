@@ -68,7 +68,10 @@ deptrac:
       - Support
       - Exceptions
 
+    # Controllers → Requests → Actions/Services → Models is the documented
+    # chain; a FormRequest may hand off to an Action but never touch a Model.
     Requests:
+      - Actions
       - Enums
       - Support
       - Exceptions
@@ -105,14 +108,19 @@ deptrac:
 
     Models:
       - Enums
-      - Support
 
     Enums: []
 
+    # Support holds domain helpers (PlanSnapshot, CustomFieldBackfill,
+    # InstallationState), so it may read Models. The reverse edge does not
+    # exist — Models depend only on Enums — which keeps the graph acyclic.
     Support:
+      - Models
       - Enums
       - Exceptions
 
-    Exceptions: []
+    # Domain exceptions name the enum cases they reject.
+    Exceptions:
+      - Enums
 
   skip_violations: {}

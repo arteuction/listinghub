@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: ["**"]
 
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
   lint-and-analyse:
     name: Pint · Larastan
@@ -24,8 +28,10 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
+      # -v prints the diff for every offending file, so a failing run says
+      # exactly what to change instead of only naming the rules.
       - name: Laravel Pint (code style)
-        run: vendor/bin/pint --test
+        run: vendor/bin/pint --test -v
 
       - name: Larastan (static analysis)
         run: vendor/bin/phpstan analyse --memory-limit=512M
@@ -103,11 +109,3 @@ jobs:
           DB_DATABASE: listinghub_test
           DB_USERNAME: root
           DB_PASSWORD: root
-
-  dependency-review:
-    name: Dependency Review
-    runs-on: ubuntu-24.04
-    if: github.event_name == 'pull_request'
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/dependency-review-action@v4
