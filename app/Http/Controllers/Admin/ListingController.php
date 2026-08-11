@@ -5,15 +5,20 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\Listings\SyncListingCustomFields;
+use App\Actions\Listings\TransitionListing;
 use App\Enums\ListingStatus;
+use App\Enums\ListingTransition;
 use App\Exceptions\CustomFieldConflict;
+use App\Exceptions\InvalidListingTransition;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ListingRequest;
 use App\Models\Category;
 use App\Models\CustomField;
 use App\Models\Listing;
+use App\Support\SearchTerm;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -27,6 +32,63 @@ use Illuminate\View\View;
  */
 class ListingController extends Controller
 {
+    /**
+     * Every listing, whatever its status — the admin counterpart to the public
+     * catalog, which by definition can only show published rows. Filtering by
+     * status is what makes the queue usable: suspended and draft listings are
+     * otherwise reachable only if you already know the id.
+     */
+    public function index(Request $request): View
+    {
+        $term = trim((string) $request->query('q', ''));
+        $status = ListingStatus::tryFrom((string) $request->query('status', ''));
+
+        $listings = Listing::query()
+            ->when($term !== '', fn ($query) => $query->whereRaw(
+                SearchTerm::likeExpression('listings.title'),
+                [SearchTerm::containsPattern($term)],
+            ))
+            ->when($status !== null, fn ($query) => $query->where('listings.status', $status->value))
+            ->with(['owner', 'category'])
+            ->orderByDesc('listings.id')
+            ->paginate(25)
+            ->withQueryString();
+
+        return view('admin.listings.index', [
+            'listings' => $listings,
+            'term' => $term,
+            'status' => $status,
+            'statuses' => ListingStatus::cases(),
+        ]);
+    }
+
+    /**
+     * Apply one listing status change.
+     *
+     * The posted value is a ListingTransition, and legality is decided twice
+     * by the same closed map: availableFrom() is what rendered the button, and
+     * TransitionListing re-checks fromStatus against the row it locks. So an
+     * operator acting on a stale page — the row moved on after the render —
+     * gets a message rather than a status written over someone else's
+     * decision. Nothing here names a status directly.
+     */
+    public function transition(Request $request, Listing $listing, TransitionListing $transition): RedirectResponse
+    {
+        $move = ListingTransition::tryFrom((string) $request->input('transition'));
+
+        if ($move === null || ! in_array($move, ListingTransition::availableFrom($listing->status), true)) {
+            return back()->withErrors(['transition' => 'Тази промяна на статуса не е позволена.']);
+        }
+
+        try {
+            $transition->handle($listing, $move);
+        } catch (InvalidListingTransition) {
+            return back()->withErrors(['transition' => 'Статусът е променен междувременно. Опитайте отново.']);
+        }
+
+        return back()->with('status', 'Статусът на обявата е обновен.');
+    }
+
     public function create(Category $category): View
     {
         return view('admin.listings.form', [

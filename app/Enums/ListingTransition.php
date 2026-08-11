@@ -44,6 +44,41 @@ enum ListingTransition: string
     }
 
     /**
+     * The moves legal from $from.
+     *
+     * The admin UI renders its buttons from this, so what an operator can
+     * click is derived from the map rather than restated beside it — a
+     * transition removed here disappears from the interface with it.
+     *
+     * Submit and AutoPublish are excluded: both leave Draft, and which one
+     * applies is decided by the moderation setting when the OWNER submits.
+     * An admin publishing a draft directly would bypass that decision.
+     *
+     * @return list<self>
+     */
+    public static function availableFrom(ListingStatus $from): array
+    {
+        return array_values(array_filter(
+            self::cases(),
+            fn (self $transition): bool => $transition->fromStatus() === $from
+                && ! in_array($transition, [self::Submit, self::AutoPublish], true),
+        ));
+    }
+
+    /** Imperative label for the admin button that applies this move. */
+    public function adminLabel(): string
+    {
+        return match ($this) {
+            self::Submit => 'Изпрати за одобрение',
+            self::AutoPublish => 'Публикувай',
+            self::Approve => 'Одобри',
+            self::Disapprove => 'Върни за преглед',
+            self::Suspend => 'Спри',
+            self::Restore => 'Възстанови',
+        };
+    }
+
+    /**
      * Resolve the transition connecting two statuses, or null if the move is
      * not part of the legal map.
      */
