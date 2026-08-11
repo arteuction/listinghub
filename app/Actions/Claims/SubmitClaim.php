@@ -8,6 +8,7 @@ use App\Enums\ModerationStatus;
 use App\Models\Listing;
 use App\Models\ListingClaim;
 use App\Models\User;
+use App\Support\StoredClaimDocument;
 
 /**
  * Records a member's claim of ownership over an existing listing.
@@ -20,14 +21,19 @@ use App\Models\User;
 final class SubmitClaim
 {
     /** @param array<string, mixed> $data */
-    public function execute(Listing $listing, User $claimant, array $data): ListingClaim
+    public function execute(Listing $listing, User $claimant, array $data, ?StoredClaimDocument $document = null): ListingClaim
     {
         return ListingClaim::create([
             'listing_id' => $listing->getKey(),
             'user_id' => $claimant->getKey(),
             'status' => ModerationStatus::Pending->value,
             'message' => $data['message'] ?? null,
-            'document_path' => $data['document_path'] ?? null,
+            'document_path' => $document?->path,
+            'document_disk' => $document?->disk,
+            'document_mime' => $document?->mime,
+            'document_size' => $document?->sizeBytes,
+            'document_sha256' => $document?->sha256,
+            'document_original_name' => $document?->originalName,
         ]);
     }
 }

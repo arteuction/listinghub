@@ -62,13 +62,23 @@
         <p>Nothing pending.</p>
     @else
         <table>
-            <thead><tr><th>Listing</th><th>Claimant</th><th>Message</th><th></th></tr></thead>
+            <thead><tr><th>Listing</th><th>Claimant</th><th>Message</th><th>Document</th><th></th></tr></thead>
             <tbody>
                 @foreach ($claims as $claim)
                     <tr>
                         <td>{{ $claim->listing?->title ?? '—' }}</td>
                         <td>{{ $claim->user?->email ?? '—' }}</td>
                         <td>{{ Str::limit((string) $claim->message, 120) }}</td>
+                        <td>
+                            @if ($claim->hasDocument())
+                                <a href="{{ route('admin.claims.document', $claim) }}">
+                                    {{ $claim->document_original_name ?? 'Document' }}
+                                </a>
+                                <small>({{ number_format((int) $claim->document_size / 1024, 0) }} KB)</small>
+                            @else
+                                —
+                            @endif
+                        </td>
                         <td>
                             {{-- Approving TRANSFERS the listing to the claimant. --}}
                             <form method="POST" action="{{ route('admin.moderation.claims.decide', $claim) }}" style="display:inline"
