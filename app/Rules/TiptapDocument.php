@@ -20,7 +20,7 @@ final class TiptapDocument implements ValidationRule
         if (is_string($value)) {
             $decoded = json_decode($value, true);
             if (! is_array($decoded)) {
-                $fail("The :attribute must be a valid Tiptap JSON document.");
+                $fail('The :attribute must be a valid Tiptap JSON document.');
 
                 return;
             }
@@ -28,13 +28,13 @@ final class TiptapDocument implements ValidationRule
         }
 
         if (! is_array($value)) {
-            $fail("The :attribute must be a Tiptap document object.");
+            $fail('The :attribute must be a Tiptap document object.');
 
             return;
         }
 
         try {
-            (new TiptapValidator())->validate($value);
+            (new TiptapValidator)->validate($value);
         } catch (InvalidTiptapContent $e) {
             $fail($e->getMessage());
         }

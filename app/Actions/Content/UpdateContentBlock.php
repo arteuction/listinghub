@@ -67,7 +67,7 @@ final class UpdateContentBlock
                 && isset($normalized['content']['tiptap'])
                 && is_array($normalized['content']['tiptap'])
             ) {
-                (new TiptapValidator())->validate($normalized['content']['tiptap']);
+                (new TiptapValidator)->validate($normalized['content']['tiptap']);
             }
 
             $locked->fill($normalized);

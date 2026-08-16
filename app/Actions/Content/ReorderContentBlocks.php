@@ -24,8 +24,8 @@ use InvalidArgumentException;
 final class ReorderContentBlocks
 {
     /**
-     * @param  list<int>   $orderedIds  Block primary keys in the desired order.
-     * @param  Model       $owner       The page, category, or other polymorphic owner.
+     * @param  list<int>  $orderedIds  Block primary keys in the desired order.
+     * @param  Model  $owner  The page, category, or other polymorphic owner.
      */
     public function handle(array $orderedIds, Model $owner): void
     {
@@ -39,7 +39,7 @@ final class ReorderContentBlocks
 
         DB::transaction(function () use ($orderedIds, $owner): void {
             $ownerType = $owner->getMorphClass();
-            $ownerId   = (int) $owner->getKey();
+            $ownerId = (int) $owner->getKey();
 
             // Verify all submitted IDs belong to this owner (no cross-owner writes).
             $existing = ContentBlock::query()

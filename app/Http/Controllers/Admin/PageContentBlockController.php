@@ -8,6 +8,7 @@ use App\Actions\Content\CreateContentBlock;
 use App\Actions\Content\DeleteContentBlock;
 use App\Actions\Content\ReorderContentBlocks;
 use App\Actions\Content\UpdateContentBlock;
+use App\Enums\ContentBlockStatus;
 use App\Enums\ContentBlockType;
 use App\Http\Controllers\Controller;
 use App\Models\ContentBlock;
@@ -29,7 +30,7 @@ class PageContentBlockController extends Controller
     public function create(Page $page): View
     {
         return view('admin.pages.blocks-create', [
-            'page'  => $page,
+            'page' => $page,
             'types' => ContentBlockType::cases(),
         ]);
     }
@@ -37,10 +38,10 @@ class PageContentBlockController extends Controller
     public function store(Request $request, Page $page): RedirectResponse
     {
         $data = $request->validate([
-            'block_type'     => ['required', 'string'],
-            'content'        => ['nullable', 'array'],
+            'block_type' => ['required', 'string'],
+            'content' => ['nullable', 'array'],
             'content.tiptap' => ['nullable', 'array'],
-            'sort_order'     => ['nullable', 'integer', 'min:0'],
+            'sort_order' => ['nullable', 'integer', 'min:0'],
         ]);
 
         $type = ContentBlockType::from($data['block_type']);
@@ -62,7 +63,7 @@ class PageContentBlockController extends Controller
         $block->load('revisions');
 
         return view('admin.pages.blocks-edit', [
-            'page'  => $page,
+            'page' => $page,
             'block' => $block,
         ]);
     }
@@ -70,7 +71,7 @@ class PageContentBlockController extends Controller
     public function update(Request $request, Page $page, ContentBlock $block): RedirectResponse
     {
         $data = $request->validate([
-            'content'        => ['nullable', 'array'],
+            'content' => ['nullable', 'array'],
             'content.tiptap' => ['nullable', 'array'],
         ]);
 
@@ -91,7 +92,7 @@ class PageContentBlockController extends Controller
     public function reorder(Request $request, Page $page): JsonResponse
     {
         $data = $request->validate([
-            'ids'   => ['required', 'array', 'min:1'],
+            'ids' => ['required', 'array', 'min:1'],
             'ids.*' => ['required', 'string', 'uuid'],
         ]);
 
@@ -119,7 +120,7 @@ class PageContentBlockController extends Controller
 
     public function publish(Request $request, Page $page, ContentBlock $block): RedirectResponse
     {
-        $block->status = \App\Enums\ContentBlockStatus::Published;
+        $block->status = ContentBlockStatus::Published;
         $block->published_at ??= now();
         $block->updated_by = $request->user()?->getKey();
         $block->save();

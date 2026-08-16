@@ -14,6 +14,7 @@ use App\Enums\PageStatus;
 use App\Models\Menu;
 use App\Models\Page;
 use Database\Seeders\SystemPageSeeder;
+use Illuminate\Support\Str;
 
 // ─── Pages ──────────────────────────────────────────────────────────────────
 
@@ -46,14 +47,14 @@ it('publishes a page and stamps published_at once', function () {
 
 it('cannot unpublish a system page', function () {
     $page = Page::query()->create([
-        'uuid' => (string) \Illuminate\Support\Str::uuid(),
+        'uuid' => (string) Str::uuid(),
         'slug' => 'terms', 'title' => 'Terms', 'is_system' => true,
         'is_homepage' => false, 'status' => PageStatus::Published,
         'sort_order' => 1000,
     ]);
 
     expect(fn () => app(UnpublishPage::class)->handle($page))
-        ->toThrow(\InvalidArgumentException::class, 'System pages');
+        ->toThrow(InvalidArgumentException::class, 'System pages');
 });
 
 it('only one page holds is_homepage at a time', function () {
@@ -66,20 +67,20 @@ it('only one page holds is_homepage at a time', function () {
 
 it('rejects changing slug on a system page', function () {
     $page = Page::query()->create([
-        'uuid' => (string) \Illuminate\Support\Str::uuid(),
+        'uuid' => (string) Str::uuid(),
         'slug' => 'privacy', 'title' => 'Privacy', 'is_system' => true,
         'is_homepage' => false, 'status' => PageStatus::Draft, 'sort_order' => 1000,
     ]);
 
     expect(fn () => app(UpdatePage::class)->handle($page, ['slug' => 'new-slug']))
-        ->toThrow(\InvalidArgumentException::class, 'immutable');
+        ->toThrow(InvalidArgumentException::class, 'immutable');
 });
 
 it('rejects unknown fields in UpdatePage', function () {
     $page = app(CreatePage::class)->handle('Test', 'test-slug');
 
     expect(fn () => app(UpdatePage::class)->handle($page, ['status' => 'published']))
-        ->toThrow(\InvalidArgumentException::class);
+        ->toThrow(InvalidArgumentException::class);
 });
 
 // ─── Block reordering ────────────────────────────────────────────────────────
@@ -109,15 +110,15 @@ it('rejects a block ID that does not belong to the owner', function () {
     $blockOnB = app(CreateContentBlock::class)->handle(ContentBlockType::RichText, [], $pageB);
 
     expect(fn () => app(ReorderContentBlocks::class)->handle([$blockOnA->id, $blockOnB->id], $pageA))
-        ->toThrow(\InvalidArgumentException::class);
+        ->toThrow(InvalidArgumentException::class);
 });
 
 it('rejects duplicate IDs in the reorder list', function () {
-    $page  = app(CreatePage::class)->handle('Dup Test', 'dup-test');
+    $page = app(CreatePage::class)->handle('Dup Test', 'dup-test');
     $block = app(CreateContentBlock::class)->handle(ContentBlockType::RichText, [], $page);
 
     expect(fn () => app(ReorderContentBlocks::class)->handle([$block->id, $block->id], $page))
-        ->toThrow(\InvalidArgumentException::class, 'duplicate');
+        ->toThrow(InvalidArgumentException::class, 'duplicate');
 });
 
 it('no-ops a reorder with an empty list', function () {
@@ -166,7 +167,7 @@ it('rejects a javascript url in a menu item', function () {
 
     expect(fn () => app(SyncMenuItems::class)->handle($menu, [
         ['label' => 'Evil', 'url' => 'javascript:alert(1)'],
-    ]))->toThrow(\InvalidArgumentException::class, 'scheme');
+    ]))->toThrow(InvalidArgumentException::class, 'scheme');
 });
 
 it('rejects a parent_index that is not before the current item', function () {
@@ -175,7 +176,7 @@ it('rejects a parent_index that is not before the current item', function () {
     expect(fn () => app(SyncMenuItems::class)->handle($menu, [
         ['label' => 'A', 'url' => '/', 'parent_index' => 1],
         ['label' => 'B', 'url' => '/b'],
-    ]))->toThrow(\InvalidArgumentException::class, 'parent_index');
+    ]))->toThrow(InvalidArgumentException::class, 'parent_index');
 });
 
 it('rejects a menu item with an empty label', function () {
@@ -183,13 +184,13 @@ it('rejects a menu item with an empty label', function () {
 
     expect(fn () => app(SyncMenuItems::class)->handle($menu, [
         ['label' => '   ', 'url' => '/'],
-    ]))->toThrow(\InvalidArgumentException::class, 'label');
+    ]))->toThrow(InvalidArgumentException::class, 'label');
 });
 
 // ─── System page seeder ──────────────────────────────────────────────────────
 
 it('system page seeder is idempotent', function () {
-    $seeder = new SystemPageSeeder();
+    $seeder = new SystemPageSeeder;
     $seeder->run();
     $seeder->run();
 

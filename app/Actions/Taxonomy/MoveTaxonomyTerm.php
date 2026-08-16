@@ -48,7 +48,7 @@ final class MoveTaxonomyTerm
     private function doMove(TaxonomyTerm $term, ?int $newParentId, ?User $actor): TaxonomyTerm
     {
         return DB::transaction(function () use ($term, $newParentId, $actor): TaxonomyTerm {
-            $term->parent_id  = $newParentId;
+            $term->parent_id = $newParentId;
             $term->updated_by = $actor?->getKey();
             $term->save();
 

@@ -26,7 +26,7 @@ final class ScheduledPublication extends Model
     {
         return [
             'scheduled_for' => 'datetime',
-            'processed_at'  => 'datetime',
+            'processed_at' => 'datetime',
         ];
     }
 

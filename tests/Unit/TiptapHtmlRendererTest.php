@@ -6,7 +6,7 @@ use App\Exceptions\InvalidTiptapContent;
 use App\Support\Tiptap\TiptapHtmlRenderer;
 
 beforeEach(function () {
-    $this->renderer = new TiptapHtmlRenderer();
+    $this->renderer = new TiptapHtmlRenderer;
 });
 
 it('renders a paragraph', function () {

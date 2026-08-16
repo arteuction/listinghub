@@ -45,9 +45,9 @@ final class Page extends Model
     protected function casts(): array
     {
         return [
-            'status'       => PageStatus::class,
-            'is_system'    => 'boolean',
-            'is_homepage'  => 'boolean',
+            'status' => PageStatus::class,
+            'is_system' => 'boolean',
+            'is_homepage' => 'boolean',
             'published_at' => 'datetime',
         ];
     }

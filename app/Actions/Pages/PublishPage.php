@@ -25,9 +25,9 @@ final class PublishPage
                     ->update(['is_homepage' => false]);
             }
 
-            $page->status      = PageStatus::Published;
+            $page->status = PageStatus::Published;
             $page->published_at ??= now();
-            $page->updated_by  = $actor?->getKey();
+            $page->updated_by = $actor?->getKey();
             $page->save();
 
             return $page;

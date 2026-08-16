@@ -25,7 +25,7 @@ use InvalidArgumentException;
 final class SyncMenuItems
 {
     /**
-     * @param array<int, array{label: string, url: string, open_in_new_tab?: bool, parent_index?: int|null}> $items
+     * @param  array<int, array{label: string, url: string, open_in_new_tab?: bool, parent_index?: int|null}>  $items
      */
     public function handle(Menu $menu, array $items): void
     {
@@ -52,12 +52,12 @@ final class SyncMenuItems
                 }
 
                 $created[$i] = MenuItem::query()->create([
-                    'menu_id'         => $menu->id,
-                    'parent_id'       => $parentId,
-                    'label'           => trim($item['label']),
-                    'url'             => $item['url'],
+                    'menu_id' => $menu->id,
+                    'parent_id' => $parentId,
+                    'label' => trim($item['label']),
+                    'url' => $item['url'],
                     'open_in_new_tab' => (bool) ($item['open_in_new_tab'] ?? false),
-                    'sort_order'      => ($i + 1) * 1000,
+                    'sort_order' => ($i + 1) * 1000,
                 ]);
             }
         });

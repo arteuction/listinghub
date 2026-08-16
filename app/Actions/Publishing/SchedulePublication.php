@@ -19,7 +19,8 @@ use InvalidArgumentException;
  */
 final class SchedulePublication
 {
-    public const ACTION_PUBLISH   = 'publish';
+    public const ACTION_PUBLISH = 'publish';
+
     public const ACTION_UNPUBLISH = 'unpublish';
 
     public function handle(
@@ -47,10 +48,10 @@ final class SchedulePublication
 
             return ScheduledPublication::query()->create([
                 'schedulable_type' => $resource->getMorphClass(),
-                'schedulable_id'   => $resource->getKey(),
-                'action'           => $action,
-                'scheduled_for'    => $scheduledFor,
-                'created_by'       => $actor?->getKey(),
+                'schedulable_id' => $resource->getKey(),
+                'action' => $action,
+                'scheduled_for' => $scheduledFor,
+                'created_by' => $actor?->getKey(),
             ]);
         });
     }

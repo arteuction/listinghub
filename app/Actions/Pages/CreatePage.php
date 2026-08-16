@@ -25,15 +25,15 @@ final class CreatePage
             }
 
             return Page::query()->create([
-                'uuid'        => (string) Str::uuid(),
-                'slug'        => $slug,
-                'title'       => $title,
-                'is_system'   => false,
+                'uuid' => (string) Str::uuid(),
+                'slug' => $slug,
+                'title' => $title,
+                'is_system' => false,
                 'is_homepage' => $isHomepage,
-                'status'      => PageStatus::Draft,
-                'sort_order'  => max(0, $sortOrder),
-                'created_by'  => $actor?->getKey(),
-                'updated_by'  => $actor?->getKey(),
+                'status' => PageStatus::Draft,
+                'sort_order' => max(0, $sortOrder),
+                'created_by' => $actor?->getKey(),
+                'updated_by' => $actor?->getKey(),
             ]);
         });
     }

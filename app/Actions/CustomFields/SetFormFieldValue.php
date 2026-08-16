@@ -53,7 +53,7 @@ final class SetFormFieldValue
 
             return CustomFieldValue::query()->create(array_merge($payload, [
                 'custom_field_id' => $field->id,
-                'listing_id'      => $listing->id,
+                'listing_id' => $listing->id,
             ]));
         });
     }

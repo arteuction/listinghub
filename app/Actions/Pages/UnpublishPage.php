@@ -17,7 +17,7 @@ final class UnpublishPage
             throw new InvalidArgumentException('System pages cannot be unpublished.');
         }
 
-        $page->status     = PageStatus::Draft;
+        $page->status = PageStatus::Draft;
         $page->updated_by = $actor?->getKey();
         $page->save();
 

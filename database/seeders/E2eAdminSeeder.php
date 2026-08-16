@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Models\ContentBlock;
 use App\Models\Page;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class E2eAdminSeeder extends Seeder
 {
@@ -45,7 +47,7 @@ class E2eAdminSeeder extends Seeder
         $page = Page::query()->firstOrCreate(
             ['slug' => 'e2e-test-page'],
             [
-                'uuid' => (string) \Illuminate\Support\Str::uuid(),
+                'uuid' => (string) Str::uuid(),
                 'title' => 'E2E Test Page',
                 'status' => 'draft',
                 'sort_order' => 9000,
@@ -55,8 +57,8 @@ class E2eAdminSeeder extends Seeder
         // Create two content blocks if none exist
         if ($page->contentBlocks()->count() === 0) {
             foreach (['Block Alpha', 'Block Beta'] as $i => $label) {
-                \App\Models\ContentBlock::query()->create([
-                    'uuid' => (string) \Illuminate\Support\Str::uuid(),
+                ContentBlock::query()->create([
+                    'uuid' => (string) Str::uuid(),
                     'owner_type' => $page->getMorphClass(),
                     'owner_id' => $page->id,
                     'block_type' => 'rich_text',

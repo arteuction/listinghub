@@ -28,25 +28,25 @@ function makeCategory(string $name = 'Services'): Category
 
 function makeSection(Category $category, string $title = 'Details', int $sort = 1000, ?string $description = null): FormSection
 {
-    return (new CreateFormSection())->handle($category, $title, $description, $sort);
+    return (new CreateFormSection)->handle($category, $title, $description, $sort);
 }
 
 function makeField(Category $category, string $key = 'phone', CustomFieldType $type = CustomFieldType::Text, int $sort = 1000): CustomField
 {
     return CustomField::query()->create([
         'category_id' => $category->id,
-        'label'       => $key,
-        'key'         => $key,
-        'type'        => $type,
-        'sort_order'  => $sort,
+        'label' => $key,
+        'key' => $key,
+        'type' => $type,
+        'sort_order' => $sort,
     ]);
 }
 
 // ─── CreateFormSection ────────────────────────────────────────────────────────
 
 it('creates a section belonging to a category', function () {
-    $cat     = makeCategory();
-    $section = (new CreateFormSection())->handle($cat, 'Basic Info', 'Fill in the basics', 2000, true);
+    $cat = makeCategory();
+    $section = (new CreateFormSection)->handle($cat, 'Basic Info', 'Fill in the basics', 2000, true);
 
     expect($section->category_id)->toBe($cat->id)
         ->and($section->title)->toBe('Basic Info')
@@ -56,20 +56,20 @@ it('creates a section belonging to a category', function () {
 });
 
 it('trims whitespace from title and description on create', function () {
-    $section = (new CreateFormSection())->handle(makeCategory(), '  Padded  ', '  desc  ');
+    $section = (new CreateFormSection)->handle(makeCategory(), '  Padded  ', '  desc  ');
 
     expect($section->title)->toBe('Padded')
         ->and($section->description)->toBe('desc');
 });
 
 it('stores null description when not provided', function () {
-    $section = (new CreateFormSection())->handle(makeCategory(), 'Solo');
+    $section = (new CreateFormSection)->handle(makeCategory(), 'Solo');
 
     expect($section->description)->toBeNull();
 });
 
 it('clamps negative sort_order to zero on create', function () {
-    $section = (new CreateFormSection())->handle(makeCategory(), 'Edge', sortOrder: -5);
+    $section = (new CreateFormSection)->handle(makeCategory(), 'Edge', sortOrder: -5);
 
     expect($section->sort_order)->toBe(0);
 });
@@ -79,10 +79,10 @@ it('clamps negative sort_order to zero on create', function () {
 it('updates allowed fields', function () {
     $section = makeSection(makeCategory());
 
-    (new UpdateFormSection())->handle($section, [
-        'title'          => 'Updated',
-        'description'    => 'New desc',
-        'sort_order'     => 500,
+    (new UpdateFormSection)->handle($section, [
+        'title' => 'Updated',
+        'description' => 'New desc',
+        'sort_order' => 500,
         'is_collapsible' => true,
     ]);
 
@@ -96,20 +96,20 @@ it('updates allowed fields', function () {
 it('rejects unknown fields on update', function () {
     $section = makeSection(makeCategory());
 
-    expect(fn () => (new UpdateFormSection())->handle($section, ['category_id' => 99]))
+    expect(fn () => (new UpdateFormSection)->handle($section, ['category_id' => 99]))
         ->toThrow(InvalidArgumentException::class, 'Unknown fields');
 });
 
 it('rejects empty title on update', function () {
     $section = makeSection(makeCategory());
 
-    expect(fn () => (new UpdateFormSection())->handle($section, ['title' => '  ']))
+    expect(fn () => (new UpdateFormSection)->handle($section, ['title' => '  ']))
         ->toThrow(InvalidArgumentException::class, 'Title cannot be empty');
 });
 
 it('sets description to null when blank string on update', function () {
     $section = makeSection(makeCategory(), 'Desc Section', 1000, 'old');
-    (new UpdateFormSection())->handle($section, ['description' => '  ']);
+    (new UpdateFormSection)->handle($section, ['description' => '  ']);
 
     expect($section->fresh()->description)->toBeNull();
 });
@@ -118,19 +118,19 @@ it('sets description to null when blank string on update', function () {
 
 it('deletes an empty section', function () {
     $section = makeSection(makeCategory());
-    $id      = $section->id;
+    $id = $section->id;
 
-    (new DeleteFormSection())->handle($section);
+    (new DeleteFormSection)->handle($section);
 
     expect(FormSection::query()->find($id))->toBeNull();
 });
 
 it('refuses deletion when section has assigned fields', function () {
-    $cat     = makeCategory();
+    $cat = makeCategory();
     $section = makeSection($cat);
     makeField($cat)->update(['section_id' => $section->id]);
 
-    expect(fn () => (new DeleteFormSection())->handle($section))
+    expect(fn () => (new DeleteFormSection)->handle($section))
         ->toThrow(InvalidArgumentException::class, 'still has assigned fields');
 });
 
@@ -138,11 +138,11 @@ it('refuses deletion when section has assigned fields', function () {
 
 it('reorders fields within a category', function () {
     $cat = makeCategory();
-    $a   = makeField($cat, 'alpha', sort: 1000);
-    $b   = makeField($cat, 'beta', sort: 2000);
-    $c   = makeField($cat, 'gamma', sort: 3000);
+    $a = makeField($cat, 'alpha', sort: 1000);
+    $b = makeField($cat, 'beta', sort: 2000);
+    $c = makeField($cat, 'gamma', sort: 3000);
 
-    (new ReorderFormFields())->handle([$c->id, $a->id, $b->id], $cat);
+    (new ReorderFormFields)->handle([$c->id, $a->id, $b->id], $cat);
 
     $orders = CustomField::query()
         ->whereIn('id', [$a->id, $b->id, $c->id])
@@ -157,26 +157,26 @@ it('no-ops when the reorder list is empty', function () {
     $cat = makeCategory();
     makeField($cat, 'alpha', sort: 1000);
 
-    (new ReorderFormFields())->handle([], $cat);
+    (new ReorderFormFields)->handle([], $cat);
 
     expect(true)->toBeTrue();
 });
 
 it('rejects duplicate IDs in reorder list', function () {
     $cat = makeCategory();
-    $a   = makeField($cat, 'alpha');
+    $a = makeField($cat, 'alpha');
 
-    expect(fn () => (new ReorderFormFields())->handle([$a->id, $a->id], $cat))
+    expect(fn () => (new ReorderFormFields)->handle([$a->id, $a->id], $cat))
         ->toThrow(InvalidArgumentException::class, 'duplicate');
 });
 
 it('rejects field IDs that do not belong to the category', function () {
     $cat1 = makeCategory('Cat1');
     $cat2 = makeCategory('Cat2');
-    $a    = makeField($cat1, 'alpha');
-    $b    = makeField($cat2, 'beta');
+    $a = makeField($cat1, 'alpha');
+    $b = makeField($cat2, 'beta');
 
-    expect(fn () => (new ReorderFormFields())->handle([$a->id, $b->id], $cat1))
+    expect(fn () => (new ReorderFormFields)->handle([$a->id, $b->id], $cat1))
         ->toThrow(InvalidArgumentException::class, 'not found in this category');
 });
 
@@ -184,7 +184,7 @@ it('rejects field IDs that do not belong to the category', function () {
 
 function makeSetAction(): SetFormFieldValue
 {
-    return new SetFormFieldValue(new CustomFieldValueNormalizer());
+    return new SetFormFieldValue(new CustomFieldValueNormalizer);
 }
 
 function makeListing(Category $category): Listing
@@ -193,8 +193,8 @@ function makeListing(Category $category): Listing
 }
 
 it('creates a value row on first set', function () {
-    $cat     = makeCategory();
-    $field   = makeField($cat, 'notes', CustomFieldType::Text);
+    $cat = makeCategory();
+    $field = makeField($cat, 'notes', CustomFieldType::Text);
     $listing = makeListing($cat);
 
     $value = makeSetAction()->handle($field, $listing, 'hello world');
@@ -206,8 +206,8 @@ it('creates a value row on first set', function () {
 });
 
 it('updates an existing value row', function () {
-    $cat     = makeCategory();
-    $field   = makeField($cat, 'notes', CustomFieldType::Text);
+    $cat = makeCategory();
+    $field = makeField($cat, 'notes', CustomFieldType::Text);
     $listing = makeListing($cat);
 
     makeSetAction()->handle($field, $listing, 'first');
@@ -218,8 +218,8 @@ it('updates an existing value row', function () {
 });
 
 it('deletes an existing row when value is empty', function () {
-    $cat     = makeCategory();
-    $field   = makeField($cat, 'notes', CustomFieldType::Text);
+    $cat = makeCategory();
+    $field = makeField($cat, 'notes', CustomFieldType::Text);
     $listing = makeListing($cat);
 
     makeSetAction()->handle($field, $listing, 'initial');
@@ -230,8 +230,8 @@ it('deletes an existing row when value is empty', function () {
 });
 
 it('returns null without creating a row when set to empty on fresh field', function () {
-    $cat     = makeCategory();
-    $field   = makeField($cat, 'notes', CustomFieldType::Text);
+    $cat = makeCategory();
+    $field = makeField($cat, 'notes', CustomFieldType::Text);
     $listing = makeListing($cat);
 
     $result = makeSetAction()->handle($field, $listing, null);
@@ -241,8 +241,8 @@ it('returns null without creating a row when set to empty on fresh field', funct
 });
 
 it('stores a decimal value and nulls other columns', function () {
-    $cat     = makeCategory();
-    $field   = makeField($cat, 'price', CustomFieldType::Number);
+    $cat = makeCategory();
+    $field = makeField($cat, 'price', CustomFieldType::Number);
     $listing = makeListing($cat);
 
     $value = makeSetAction()->handle($field, $listing, '12.50');
@@ -254,8 +254,8 @@ it('stores a decimal value and nulls other columns', function () {
 });
 
 it('stores a boolean value', function () {
-    $cat     = makeCategory();
-    $field   = makeField($cat, 'verified', CustomFieldType::Checkbox);
+    $cat = makeCategory();
+    $field = makeField($cat, 'verified', CustomFieldType::Checkbox);
     $listing = makeListing($cat);
 
     $value = makeSetAction()->handle($field, $listing, true);

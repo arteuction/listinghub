@@ -42,15 +42,15 @@ final class UpsertSeoMeta
             /** @var SeoMeta $meta */
             $meta = SeoMeta::query()->firstOrNew([
                 'seoable_type' => $resource->getMorphClass(),
-                'seoable_id'   => $resource->getKey(),
+                'seoable_id' => $resource->getKey(),
             ]);
 
             $meta->fill([
-                'meta_title'       => isset($data['meta_title'])       ? mb_substr((string) $data['meta_title'], 0, 120)       : $meta->meta_title,
+                'meta_title' => isset($data['meta_title']) ? mb_substr((string) $data['meta_title'], 0, 120) : $meta->meta_title,
                 'meta_description' => isset($data['meta_description']) ? mb_substr((string) $data['meta_description'], 0, 320) : $meta->meta_description,
-                'robots'           => $data['robots']          ?? $meta->robots ?? 'index,follow',
-                'canonical_path'   => $data['canonical_path']  ?? $meta->canonical_path,
-                'og'               => $data['og']              ?? $meta->og,
+                'robots' => $data['robots'] ?? $meta->robots ?? 'index,follow',
+                'canonical_path' => $data['canonical_path'] ?? $meta->canonical_path,
+                'og' => $data['og'] ?? $meta->og,
             ]);
 
             $meta->save();

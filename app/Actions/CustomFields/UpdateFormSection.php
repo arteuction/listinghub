@@ -15,7 +15,7 @@ final class UpdateFormSection
     {
         $unknown = array_diff(array_keys($fields), self::ALLOWED);
         if ($unknown !== []) {
-            throw new InvalidArgumentException('Unknown fields: ' . implode(', ', $unknown));
+            throw new InvalidArgumentException('Unknown fields: '.implode(', ', $unknown));
         }
 
         if (isset($fields['title'])) {

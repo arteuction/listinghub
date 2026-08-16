@@ -9,7 +9,6 @@ use App\Actions\Pages\PublishPage;
 use App\Actions\Pages\UnpublishPage;
 use App\Actions\Pages\UpdatePage;
 use App\Actions\Publishing\IssuePreviewToken;
-use App\Enums\PageStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Page;
 use Illuminate\Http\RedirectResponse;
@@ -41,8 +40,8 @@ class PageController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'title'      => ['required', 'string', 'max:255'],
-            'slug'       => ['required', 'string', 'max:255', 'unique:pages,slug', 'regex:/^[a-z0-9-]+$/'],
+            'title' => ['required', 'string', 'max:255'],
+            'slug' => ['required', 'string', 'max:255', 'unique:pages,slug', 'regex:/^[a-z0-9-]+$/'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
         ]);
 
@@ -64,7 +63,7 @@ class PageController extends Controller
     public function update(Request $request, Page $page): RedirectResponse
     {
         $rules = [
-            'title'      => ['required', 'string', 'max:255'],
+            'title' => ['required', 'string', 'max:255'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
         ];
 
@@ -119,7 +118,7 @@ class PageController extends Controller
     public function blocks(Page $page): View
     {
         return view('admin.pages.blocks', [
-            'page'   => $page,
+            'page' => $page,
             'blocks' => $page->contentBlocks()->withTrashed(false)->get(),
         ]);
     }

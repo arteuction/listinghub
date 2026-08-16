@@ -24,11 +24,11 @@ class TaxonomySeeder extends Seeder
         $listingCats = Taxonomy::query()->firstOrCreate(
             ['slug' => 'listing-categories'],
             [
-                'name'            => 'Категории обяви',
-                'context'         => 'listings',
+                'name' => 'Категории обяви',
+                'context' => 'listings',
                 'is_hierarchical' => true,
-                'allow_multiple'  => false,
-                'icon_type'       => 'emoji',
+                'allow_multiple' => false,
+                'icon_type' => 'emoji',
             ]
         );
 
@@ -36,11 +36,11 @@ class TaxonomySeeder extends Seeder
         Taxonomy::query()->firstOrCreate(
             ['slug' => 'listing-amenities'],
             [
-                'name'            => 'Удобства',
-                'context'         => 'listings',
+                'name' => 'Удобства',
+                'context' => 'listings',
                 'is_hierarchical' => false,
-                'allow_multiple'  => true,
-                'icon_type'       => 'emoji',
+                'allow_multiple' => true,
+                'icon_type' => 'emoji',
             ]
         );
 
@@ -66,18 +66,19 @@ class TaxonomySeeder extends Seeder
             if ($category->taxonomy_term_id !== null) {
                 // Already bridged — recurse to children
                 $this->bridgeLevel($category->id, $category->taxonomy_term_id, $taxonomy);
+
                 continue;
             }
 
             $term = TaxonomyTerm::query()->firstOrCreate(
                 ['taxonomy_id' => $taxonomy->id, 'slug' => $category->slug],
                 [
-                    'parent_id'   => $termParentId,
-                    'name'        => $category->name,
-                    'icon'        => $category->icon,
-                    'image_path'  => $category->image_path,
-                    'sort_order'  => $category->sort_order,
-                    'status'      => $category->is_active ? 'published' : 'archived',
+                    'parent_id' => $termParentId,
+                    'name' => $category->name,
+                    'icon' => $category->icon,
+                    'image_path' => $category->image_path,
+                    'sort_order' => $category->sort_order,
+                    'status' => $category->is_active ? 'published' : 'archived',
                 ]
             );
 

@@ -24,8 +24,8 @@ final class Taxonomy extends Model
     {
         return [
             'is_hierarchical' => 'boolean',
-            'allow_multiple'  => 'boolean',
-            'settings'        => 'array',
+            'allow_multiple' => 'boolean',
+            'settings' => 'array',
         ];
     }
 

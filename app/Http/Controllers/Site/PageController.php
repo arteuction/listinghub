@@ -56,9 +56,9 @@ class PageController extends Controller
         $blocks = $page->contentBlocks()->get(); // all statuses in preview
 
         return view('site.pages.show', [
-            'page'      => $page,
-            'blocks'    => $blocks,
-            'seo'       => null,
+            'page' => $page,
+            'blocks' => $blocks,
+            'seo' => null,
             'isPreview' => true,
         ]);
     }

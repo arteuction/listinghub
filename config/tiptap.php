@@ -60,8 +60,8 @@ return [
 
     'link' => [
         'allowed_schemes' => ['https', 'http'],
-        'allow_relative'  => true,
-        'force_rel'       => 'noopener noreferrer nofollow',
+        'allow_relative' => true,
+        'force_rel' => 'noopener noreferrer nofollow',
     ],
 
     /*
@@ -90,17 +90,17 @@ return [
     */
 
     'purifier' => [
-        'Core.Encoding'              => 'UTF-8',
-        'HTML.Doctype'               => 'HTML 4.01 Transitional',
-        'HTML.Allowed'               => 'h2,h3,p,br,strong,em,s,a[href|target|rel],ul,ol,li,blockquote',
-        'HTML.AllowedAttributes'     => 'a.href,a.target,a.rel',
-        'Attr.AllowedFrameTargets'   => ['_blank'],
-        'Attr.AllowedRel'            => 'noopener,noreferrer,nofollow',
-        'AutoFormat.AutoParagraph'   => false,
-        'AutoFormat.RemoveEmpty'     => true,
-        'URI.AllowedSchemes'         => ['http' => true, 'https' => true],
+        'Core.Encoding' => 'UTF-8',
+        'HTML.Doctype' => 'HTML 4.01 Transitional',
+        'HTML.Allowed' => 'h2,h3,p,br,strong,em,s,a[href|target|rel],ul,ol,li,blockquote',
+        'HTML.AllowedAttributes' => 'a.href,a.target,a.rel',
+        'Attr.AllowedFrameTargets' => ['_blank'],
+        'Attr.AllowedRel' => 'noopener,noreferrer,nofollow',
+        'AutoFormat.AutoParagraph' => false,
+        'AutoFormat.RemoveEmpty' => true,
+        'URI.AllowedSchemes' => ['http' => true, 'https' => true],
         'URI.DisableExternalResources' => false,
-        'Output.Newline'             => "\n",
+        'Output.Newline' => "\n",
     ],
 
 ];

@@ -17,23 +17,23 @@ final class TiptapValidator
 {
     /** Node types that may carry attrs and which attributes they allow. */
     private const NODE_ATTRS = [
-        'doc'         => [],
-        'paragraph'   => [],
-        'heading'     => ['level'],
-        'bulletList'  => [],
+        'doc' => [],
+        'paragraph' => [],
+        'heading' => ['level'],
+        'bulletList' => [],
         'orderedList' => ['start'],
-        'listItem'    => [],
-        'blockquote'  => [],
-        'hardBreak'   => [],
-        'text'        => [],
+        'listItem' => [],
+        'blockquote' => [],
+        'hardBreak' => [],
+        'text' => [],
     ];
 
     /** Mark types and their allowed attributes. */
     private const MARK_ATTRS = [
-        'bold'   => [],
+        'bold' => [],
         'italic' => [],
         'strike' => [],
-        'link'   => ['href', 'target', 'rel', 'class'],
+        'link' => ['href', 'target', 'rel', 'class'],
     ];
 
     private int $nodeCount = 0;
@@ -135,7 +135,6 @@ final class TiptapValidator
         }
     }
 
-    /** @param mixed $mark */
     private function validateMark(mixed $mark, string $path): void
     {
         if (! is_array($mark)) {

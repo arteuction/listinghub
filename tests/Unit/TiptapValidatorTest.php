@@ -26,7 +26,7 @@ function heading(int $level, string $text): array
 }
 
 beforeEach(function () {
-    $this->validator = new TiptapValidator();
+    $this->validator = new TiptapValidator;
 });
 
 it('accepts a minimal valid document', function () {

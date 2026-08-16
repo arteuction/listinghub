@@ -39,12 +39,12 @@ class SystemPageSeeder extends Seeder
             Page::query()->updateOrCreate(
                 ['slug' => $data['slug']],
                 [
-                    'uuid'        => Str::uuid()->toString(),
-                    'title'       => $data['title'],
-                    'is_system'   => true,
+                    'uuid' => Str::uuid()->toString(),
+                    'title' => $data['title'],
+                    'is_system' => true,
                     'is_homepage' => $data['is_homepage'],
-                    'status'      => PageStatus::Draft,
-                    'sort_order'  => ($i + 1) * 1000,
+                    'status' => PageStatus::Draft,
+                    'sort_order' => ($i + 1) * 1000,
                 ]
             );
         }
@@ -52,7 +52,7 @@ class SystemPageSeeder extends Seeder
         foreach (self::MENUS as $data) {
             Menu::query()->firstOrCreate(
                 ['handle' => $data['handle']],
-                ['name'   => $data['name']],
+                ['name' => $data['name']],
             );
         }
     }

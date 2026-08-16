@@ -28,11 +28,11 @@ final class IssuePreviewToken
             ->delete();
 
         return PreviewToken::query()->create([
-            'token'            => Str::random(48),
+            'token' => Str::random(48),
             'previewable_type' => $resource->getMorphClass(),
-            'previewable_id'   => $resource->getKey(),
-            'created_by'       => $actor?->getKey(),
-            'expires_at'       => now()->addHours($ttlHours),
+            'previewable_id' => $resource->getKey(),
+            'created_by' => $actor?->getKey(),
+            'expires_at' => now()->addHours($ttlHours),
         ]);
     }
 }

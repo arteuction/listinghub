@@ -33,7 +33,7 @@ final class ReorderFormFields
             $missing = array_diff($orderedIds, $existing);
             if ($missing !== []) {
                 throw new InvalidArgumentException(
-                    'Field IDs not found in this category: ' . implode(', ', $missing)
+                    'Field IDs not found in this category: '.implode(', ', $missing)
                 );
             }
 

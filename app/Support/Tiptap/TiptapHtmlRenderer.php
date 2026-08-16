@@ -31,16 +31,16 @@ final class TiptapHtmlRenderer
         $type = $node['type'] ?? '';
 
         return match ($type) {
-            'doc'         => $this->renderChildren($node),
-            'paragraph'   => '<p>'.$this->renderChildren($node).'</p>',
-            'heading'     => $this->renderHeading($node),
-            'bulletList'  => '<ul>'.$this->renderChildren($node).'</ul>',
+            'doc' => $this->renderChildren($node),
+            'paragraph' => '<p>'.$this->renderChildren($node).'</p>',
+            'heading' => $this->renderHeading($node),
+            'bulletList' => '<ul>'.$this->renderChildren($node).'</ul>',
             'orderedList' => $this->renderOrderedList($node),
-            'listItem'    => '<li>'.$this->renderChildren($node).'</li>',
-            'blockquote'  => '<blockquote>'.$this->renderChildren($node).'</blockquote>',
-            'hardBreak'   => '<br>',
-            'text'        => $this->renderText($node),
-            default       => '',
+            'listItem' => '<li>'.$this->renderChildren($node).'</li>',
+            'blockquote' => '<blockquote>'.$this->renderChildren($node).'</blockquote>',
+            'hardBreak' => '<br>',
+            'text' => $this->renderText($node),
+            default => '',
         };
     }
 
@@ -70,7 +70,7 @@ final class TiptapHtmlRenderer
     private function renderOrderedList(array $node): string
     {
         $start = (int) ($node['attrs']['start'] ?? 1);
-        $attr  = $start !== 1 ? " start=\"{$start}\"" : '';
+        $attr = $start !== 1 ? " start=\"{$start}\"" : '';
 
         return "<ol{$attr}>".$this->renderChildren($node).'</ol>';
     }
@@ -91,29 +91,29 @@ final class TiptapHtmlRenderer
     }
 
     /**
-     * @param array<string, mixed> $mark
+     * @param  array<string, mixed>  $mark
      */
     private function applyMark(string $text, array $mark): string
     {
         $type = $mark['type'] ?? '';
 
         return match ($type) {
-            'bold'   => "<strong>{$text}</strong>",
+            'bold' => "<strong>{$text}</strong>",
             'italic' => "<em>{$text}</em>",
             'strike' => "<s>{$text}</s>",
-            'link'   => $this->renderLink($text, $mark['attrs'] ?? []),
-            default  => $text,
+            'link' => $this->renderLink($text, $mark['attrs'] ?? []),
+            default => $text,
         };
     }
 
     /**
-     * @param array<string, mixed> $attrs
+     * @param  array<string, mixed>  $attrs
      */
     private function renderLink(string $text, array $attrs): string
     {
-        $href   = htmlspecialchars((string) ($attrs['href'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $href = htmlspecialchars((string) ($attrs['href'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $target = isset($attrs['target']) ? ' target="_blank"' : '';
-        $rel    = ' rel="'.htmlspecialchars(config('tiptap.link.force_rel', 'noopener noreferrer nofollow'), ENT_QUOTES, 'UTF-8').'"';
+        $rel = ' rel="'.htmlspecialchars(config('tiptap.link.force_rel', 'noopener noreferrer nofollow'), ENT_QUOTES, 'UTF-8').'"';
 
         return "<a href=\"{$href}\"{$target}{$rel}>{$text}</a>";
     }

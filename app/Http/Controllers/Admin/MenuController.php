@@ -25,7 +25,7 @@ class MenuController extends Controller
     public function edit(Menu $menu): View
     {
         return view('admin.menus.edit', [
-            'menu'  => $menu,
+            'menu' => $menu,
             'items' => $menu->items()->orderBy('sort_order')->get(),
         ]);
     }
@@ -33,9 +33,9 @@ class MenuController extends Controller
     public function update(Request $request, Menu $menu): RedirectResponse
     {
         $data = $request->validate([
-            'items'                => ['present', 'array'],
-            'items.*.label'        => ['required', 'string', 'max:255'],
-            'items.*.url'          => ['required', 'string', 'max:512'],
+            'items' => ['present', 'array'],
+            'items.*.label' => ['required', 'string', 'max:255'],
+            'items.*.url' => ['required', 'string', 'max:512'],
             'items.*.open_in_new_tab' => ['nullable', 'boolean'],
             'items.*.parent_index' => ['nullable', 'integer', 'min:0'],
         ]);

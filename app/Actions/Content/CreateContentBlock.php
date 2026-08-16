@@ -29,7 +29,7 @@ final class CreateContentBlock
         int $sortOrder = 1000,
     ): ContentBlock {
         if (isset($content['tiptap']) && is_array($content['tiptap'])) {
-            (new TiptapValidator())->validate($content['tiptap']);
+            (new TiptapValidator)->validate($content['tiptap']);
         }
 
         return DB::transaction(function () use ($type, $content, $owner, $actor, $sortOrder): ContentBlock {

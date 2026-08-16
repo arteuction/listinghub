@@ -39,7 +39,7 @@ class TaxonomyController extends Controller
 
         return view('admin.taxonomy.terms', [
             'taxonomy' => $taxonomy,
-            'roots'    => $terms,
+            'roots' => $terms,
         ]);
     }
 
@@ -47,8 +47,8 @@ class TaxonomyController extends Controller
     {
         return view('admin.taxonomy.term-form', [
             'taxonomy' => $taxonomy,
-            'term'     => null,
-            'parents'  => $taxonomy->is_hierarchical
+            'term' => null,
+            'parents' => $taxonomy->is_hierarchical
                 ? TaxonomyTerm::query()
                     ->where('taxonomy_id', $taxonomy->id)
                     ->orderBy('name')
@@ -60,11 +60,11 @@ class TaxonomyController extends Controller
     public function storeTerm(Request $request, Taxonomy $taxonomy): RedirectResponse
     {
         $data = $request->validate([
-            'name'      => ['required', 'string', 'max:255'],
-            'slug'      => ['required', 'string', 'max:255', 'regex:/^[a-z0-9-]+$/'],
+            'name' => ['required', 'string', 'max:255'],
+            'slug' => ['required', 'string', 'max:255', 'regex:/^[a-z0-9-]+$/'],
             'parent_id' => ['nullable', 'integer', 'exists:taxonomy_terms,id'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
-            'icon'      => ['nullable', 'string', 'max:64'],
+            'icon' => ['nullable', 'string', 'max:64'],
         ]);
 
         $parent = isset($data['parent_id'])
@@ -89,8 +89,8 @@ class TaxonomyController extends Controller
     {
         return view('admin.taxonomy.term-form', [
             'taxonomy' => $taxonomy,
-            'term'     => $term,
-            'parents'  => $taxonomy->is_hierarchical
+            'term' => $term,
+            'parents' => $taxonomy->is_hierarchical
                 ? TaxonomyTerm::query()
                     ->where('taxonomy_id', $taxonomy->id)
                     ->where('id', '!=', $term->id)
@@ -103,14 +103,14 @@ class TaxonomyController extends Controller
     public function updateTerm(Request $request, Taxonomy $taxonomy, TaxonomyTerm $term): RedirectResponse
     {
         $data = $request->validate([
-            'name'      => ['required', 'string', 'max:255'],
-            'icon'      => ['nullable', 'string', 'max:64'],
+            'name' => ['required', 'string', 'max:255'],
+            'icon' => ['nullable', 'string', 'max:64'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
         ]);
 
         $term->fill([
-            'name'       => $data['name'],
-            'icon'       => $data['icon'] ?? null,
+            'name' => $data['name'],
+            'icon' => $data['icon'] ?? null,
             'sort_order' => max(0, (int) ($data['sort_order'] ?? 1000)),
         ])->save();
 

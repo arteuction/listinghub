@@ -20,7 +20,7 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->singleton(TiptapSanitizer::class, static fn () => new TiptapSanitizer(new TiptapHtmlRenderer()));
+        $this->app->singleton(TiptapSanitizer::class, static fn () => new TiptapSanitizer(new TiptapHtmlRenderer));
     }
 
     public function boot(): void

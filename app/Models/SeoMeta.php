@@ -26,7 +26,7 @@ final class SeoMeta extends Model
     protected function casts(): array
     {
         return [
-            'og'              => 'array',
+            'og' => 'array',
             'structured_data' => 'array',
         ];
     }

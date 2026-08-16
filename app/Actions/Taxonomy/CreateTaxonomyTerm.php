@@ -34,13 +34,13 @@ final class CreateTaxonomyTerm
         return DB::transaction(function () use ($taxonomy, $name, $slug, $parent, $actor, $sortOrder): TaxonomyTerm {
             return TaxonomyTerm::query()->create([
                 'taxonomy_id' => $taxonomy->id,
-                'parent_id'   => $parent?->id,
-                'slug'        => $slug,
-                'name'        => $name,
-                'status'      => TaxonomyTermStatus::Published,
-                'sort_order'  => max(0, $sortOrder),
-                'created_by'  => $actor?->getKey(),
-                'updated_by'  => $actor?->getKey(),
+                'parent_id' => $parent?->id,
+                'slug' => $slug,
+                'name' => $name,
+                'status' => TaxonomyTermStatus::Published,
+                'sort_order' => max(0, $sortOrder),
+                'created_by' => $actor?->getKey(),
+                'updated_by' => $actor?->getKey(),
             ]);
         });
     }

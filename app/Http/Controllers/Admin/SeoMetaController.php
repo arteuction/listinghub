@@ -57,10 +57,10 @@ class SeoMetaController extends Controller
             ->first();
 
         return view('admin.seo.edit', [
-            'resource'      => $resource,
-            'seo'           => $existing,
+            'resource' => $resource,
+            'seo' => $existing,
             'robotsOptions' => self::ROBOTS_OPTIONS,
-            'formAction'    => $formAction,
+            'formAction' => $formAction,
         ]);
     }
 
@@ -68,14 +68,14 @@ class SeoMetaController extends Controller
     private function validated(Request $request): array
     {
         return $request->validate([
-            'meta_title'       => ['nullable', 'string', 'max:120'],
+            'meta_title' => ['nullable', 'string', 'max:120'],
             'meta_description' => ['nullable', 'string', 'max:320'],
-            'robots'           => ['nullable', 'string', 'in:'.implode(',', self::ROBOTS_OPTIONS)],
-            'canonical_path'   => ['nullable', 'string', 'max:512', 'regex:/^\//'],
-            'og'               => ['nullable', 'array'],
-            'og.title'         => ['nullable', 'string', 'max:120'],
-            'og.description'   => ['nullable', 'string', 'max:300'],
-            'og.image_path'    => ['nullable', 'string', 'max:512'],
+            'robots' => ['nullable', 'string', 'in:'.implode(',', self::ROBOTS_OPTIONS)],
+            'canonical_path' => ['nullable', 'string', 'max:512', 'regex:/^\//'],
+            'og' => ['nullable', 'array'],
+            'og.title' => ['nullable', 'string', 'max:120'],
+            'og.description' => ['nullable', 'string', 'max:300'],
+            'og.image_path' => ['nullable', 'string', 'max:512'],
         ]);
     }
 }

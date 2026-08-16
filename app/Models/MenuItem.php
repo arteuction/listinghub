@@ -22,6 +22,7 @@ final class MenuItem extends Model
             ->dontSubmitEmptyLogs()
             ->useLogName('admin');
     }
+
     protected $fillable = [
         'menu_id',
         'parent_id',

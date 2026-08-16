@@ -193,12 +193,12 @@ it('does not allow a revision row to be changed or deleted', function () {
     expect(function () use ($revision): void {
         $revision->reason = 'Опит за промяна';
         $revision->save();
-    })->toThrow(\LogicException::class, 'immutable');
+    })->toThrow(LogicException::class, 'immutable');
 
     $freshRevision = ContentBlockRevision::query()->findOrFail($revision->id);
 
     expect(fn () => $freshRevision->delete())
-        ->toThrow(\LogicException::class, 'immutable');
+        ->toThrow(LogicException::class, 'immutable');
 });
 
 it('rejects rollback to the current or a future version', function (int $target) {
