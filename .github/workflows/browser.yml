@@ -80,6 +80,7 @@ jobs:
           php artisan key:generate
           php artisan migrate --force
           php artisan db:seed --force
+          php artisan db:seed --class=E2eAdminSeeder --force
           php artisan storage:link
           # EnsureInstalled redirects every request to the installer until this
           # lock exists; without it the whole suite would test the wizard.
