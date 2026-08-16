@@ -27,6 +27,8 @@ class DatabaseSeeder extends Seeder
             // GeoSeeder upserts on official codes, so re-running is safe, and
             // it no-ops (with a warning) if the data file is absent.
             GeoSeeder::class,
+            SystemPageSeeder::class,
+            TaxonomySeeder::class,
         ]);
     }
 }

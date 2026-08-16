@@ -1,6 +1,6 @@
 # Admin Experience Studio - locked product scope
 
-Status: **3.6.0 scope locked; 3.6.0A foundation implemented.**
+Status: **3.6.0 scope locked; 3.6.0A–E implemented. 3.6.1 (Form Builder) next.**
 
 This document records which product ideas are carried into ListingHub from the
 reviewed directory-platform references. They are functional references only.
@@ -89,15 +89,44 @@ ListingHub will model them through one taxonomy kernel:
 1. **3.6.0A - Content foundation:** ContentBlock, optimistic versioning, full
    snapshots and append-only rollback. Implemented.
 2. **3.6.0B - Rich content:** Tiptap JSON schema, server-side sanitization,
-   sanitized projection and the first accessible admin editor.
+   sanitized projection and the first accessible admin editor. Implemented:
+   `TiptapValidator` (allow-list walk, depth + node limits), `TiptapHtmlRenderer`
+   (JSON→HTML, XSS-escaped text), `TiptapSanitizer` (renderer + HTMLPurifier
+   defence-in-depth), `TiptapDocument` validation rule, `@tiptap()` Blade directive,
+   Alpine/Tiptap `richTextEditor` component (17 Tiptap extensions, accessible toolbar,
+   link-scheme guard, hidden-input sync). 27 unit tests (validator: 16, renderer: 11).
 3. **3.6.0C - Pages and placements:** pages, navigation, block placement,
-   verified media selection and drag ordering.
+   verified media selection and drag ordering. Implemented: `pages` + `menus`
+   + `menu_items` tables; `Page` / `Menu` / `MenuItem` models; `CreatePage`,
+   `UpdatePage`, `PublishPage`, `UnpublishPage` actions; `ReorderContentBlocks`
+   (sparse order, owner-scope guard); `SyncMenuItems` (flat + one-level nesting,
+   URL scheme guard, atomic replace); `SystemPageSeeder` (6 system pages + 3 menus,
+   idempotent); 16 tests.
 4. **3.6.0D - Universal taxonomy:** compatibility bridge, hierarchical and
-   faceted vocabularies, term-owned landing pages.
+   faceted vocabularies, term-owned landing pages. Implemented: `taxonomies` +
+   `taxonomy_terms` + `taxonomy_termables` tables; `Taxonomy` / `TaxonomyTerm`
+   models (polymorphic content blocks, morphToMany listings); `TaxonomyTermStatus`
+   enum; `CreateTaxonomyTerm`, `MoveTaxonomyTerm` (cycle guard), `AttachTermToModel`
+   (allow_multiple policy), `DetachTermFromModel` actions; `TaxonomySeeder`
+   (listing-categories + amenities vocabularies, bridges Category rows, idempotent);
+   `categories.taxonomy_term_id` compatibility column; 16 tests.
 5. **3.6.0E - Publishing governance:** preview, schedule, permissions, revision
-   browser, rollback UI, cache invalidation and scoped SEO.
-6. **3.6.1 - Form Experience Builder:** structured lead/booking forms after the
-   content and taxonomy contracts are stable.
+   browser, rollback UI, cache invalidation and scoped SEO. Implemented:
+   `preview_tokens` + `seo_meta` + `scheduled_publications` tables; `PreviewToken`,
+   `SeoMeta`, `ScheduledPublication` models; `IssuePreviewToken` (48-char random
+   token, TTL, per-creator revoke-on-reissue), `SchedulePublication` (future-only,
+   replaces pending same-action, publish/unpublish co-exist), `UpsertSeoMeta`
+   (robots allowlist, relative-only canonical, no base64 OG, mb_substr title/desc,
+   true upsert); 14 tests.
+6. **3.6.1 - Form Experience Builder:** structured lead/booking forms. Implemented:
+   `form_sections` table (title, description, sort_order, is_collapsible, per-category);
+   `section_id`, `placeholder`, `help_text` columns on `custom_fields`;
+   `FormSection` model with `fields()` HasMany; `CustomField.section()` BelongsTo;
+   `CreateFormSection` (trims, clamps sort_order ≥ 0), `UpdateFormSection` (allowlist
+   guard, empty-title guard, blank-description → null), `DeleteFormSection` (rejects
+   when fields exist), `ReorderFormFields` (SparseOrder, category-scope guard, dedup
+   guard), `SetFormFieldValue` (typed write via `CustomFieldValueNormalizer`,
+   upsert-on-update, delete-on-empty, nulls all other columns); 20 tests.
 
 The Commerce milestone stays at 3.7.0. Blog/editorial publishing remains
 deferred until the Admin Experience Studio and its permission model are proven.

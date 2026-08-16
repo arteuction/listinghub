@@ -7,6 +7,25 @@
         "test:e2e": "playwright test",
         "test:e2e:ui": "playwright test --ui"
     },
+    "dependencies": {
+        "@tiptap/core": "^2.11.5",
+        "@tiptap/extension-blockquote": "^2.11.5",
+        "@tiptap/extension-bold": "^2.11.5",
+        "@tiptap/extension-bullet-list": "^2.11.5",
+        "@tiptap/extension-document": "^2.11.5",
+        "@tiptap/extension-hard-break": "^2.11.5",
+        "@tiptap/extension-heading": "^2.11.5",
+        "@tiptap/extension-history": "^2.11.5",
+        "@tiptap/extension-italic": "^2.11.5",
+        "@tiptap/extension-link": "^2.11.5",
+        "@tiptap/extension-list-item": "^2.11.5",
+        "@tiptap/extension-ordered-list": "^2.11.5",
+        "@tiptap/extension-paragraph": "^2.11.5",
+        "@tiptap/extension-placeholder": "^2.11.5",
+        "@tiptap/extension-strike": "^2.11.5",
+        "@tiptap/extension-text": "^2.11.5",
+        "@tiptap/pm": "^2.11.5"
+    },
     "devDependencies": {
         "@axe-core/playwright": "^4.12.1",
         "@playwright/test": "^1.62.1",
