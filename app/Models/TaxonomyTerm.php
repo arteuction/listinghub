@@ -22,7 +22,8 @@ final class TaxonomyTerm extends Model
         return LogOptions::defaults()
             ->logOnly(['name', 'slug', 'parent_id', 'sort_order', 'status'])
             ->logOnlyDirty()
-            ->dontSubmitEmptyLogs();
+            ->dontSubmitEmptyLogs()
+            ->useLogName('admin');
     }
 
     protected $fillable = [

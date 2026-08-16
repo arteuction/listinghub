@@ -91,17 +91,24 @@ class PageContentBlockController extends Controller
     public function reorder(Request $request, Page $page): JsonResponse
     {
         $data = $request->validate([
-            'ids'   => ['required', 'array'],
-            'ids.*' => ['required', 'string'],
+            'ids'   => ['required', 'array', 'min:1'],
+            'ids.*' => ['required', 'string', 'uuid'],
         ]);
 
-        // IDs are UUIDs; resolve to primary keys for the action
         $uuids = $data['ids'];
         $idMap = ContentBlock::query()
             ->whereIn('uuid', $uuids)
             ->where('owner_type', $page->getMorphClass())
             ->where('owner_id', $page->id)
             ->pluck('id', 'uuid');
+
+        if ($idMap->count() !== count($uuids)) {
+            $unknown = array_diff($uuids, $idMap->keys()->all());
+
+            return response()->json([
+                'error' => 'Block UUIDs not found in this page: '.implode(', ', $unknown),
+            ], 422);
+        }
 
         $orderedIds = array_map(fn (string $uuid): int => $idMap[$uuid], $uuids);
 

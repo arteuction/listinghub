@@ -3,7 +3,9 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Admin') · {{ config('app.name', 'ListingHub') }}</title>
+    @vite(['resources/css/admin.css', 'resources/js/admin.js'])
     <style>
         body { font-family: system-ui, sans-serif; margin: 0; color: #0f172a; background: #f1f5f9; }
         header { background: #0f172a; color: #e2e8f0; padding: .8rem 1.5rem; display: flex; justify-content: space-between; align-items: center; }

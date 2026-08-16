@@ -19,7 +19,8 @@ final class MenuItem extends Model
         return LogOptions::defaults()
             ->logOnly(['label', 'url', 'sort_order', 'parent_id', 'open_in_new_tab'])
             ->logOnlyDirty()
-            ->dontSubmitEmptyLogs();
+            ->dontSubmitEmptyLogs()
+            ->useLogName('admin');
     }
     protected $fillable = [
         'menu_id',

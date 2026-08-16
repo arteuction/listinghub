@@ -24,7 +24,8 @@ final class Page extends Model
         return LogOptions::defaults()
             ->logOnly(['title', 'slug', 'status', 'sort_order'])
             ->logOnlyDirty()
-            ->dontSubmitEmptyLogs();
+            ->dontSubmitEmptyLogs()
+            ->useLogName('admin');
     }
 
     protected $fillable = [
