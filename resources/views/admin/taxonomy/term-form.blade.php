@@ -34,7 +34,7 @@
         @if ($taxonomy->is_hierarchical && $parents->isNotEmpty())
             <p>
                 <label for="parent_id">Родителски термин</label><br>
-                <select id="parent_id" name="parent_id" style="width:100%;max-width:400px;">
+                <select id="parent_id" name="parent_id" data-tom-select style="width:100%;max-width:400px;">
                     <option value="">— корен —</option>
                     @foreach ($parents as $p)
                         <option value="{{ $p->id }}"
@@ -70,7 +70,7 @@
         <form method="POST" action="{{ route('admin.taxonomy.terms.move', [$taxonomy, $term]) }}">
             @csrf
             <label for="move_parent_id">Нов родител<br>
-                <select id="move_parent_id" name="parent_id" style="width:100%;max-width:400px;">
+                <select id="move_parent_id" name="parent_id" data-tom-select style="width:100%;max-width:400px;">
                     <option value="">— корен —</option>
                     @foreach ($parents as $p)
                         <option value="{{ $p->id }}"

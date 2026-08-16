@@ -11,10 +11,18 @@
     <form method="POST" action="{{ route('admin.menus.update', $menu) }}" id="menu-form">
         @csrf @method('PUT')
 
-        <div id="items-container">
+        {{-- SortableJS handles visual reorder; on submit the hidden sort_order fields reflect DOM order --}}
+        <div id="items-container"
+             data-sortable
+             style="padding:0;">
             @foreach ($items as $i => $item)
-                <div class="menu-item" style="border:1px solid #cbd5e1;padding:.75rem;margin-bottom:.5rem;background:#fff;">
-                    <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+                <div class="menu-item"
+                     style="display:flex;align-items:flex-start;gap:.5rem;border:1px solid #cbd5e1;padding:.75rem;margin-bottom:.5rem;background:#fff;">
+                    <span data-drag-handle
+                          aria-hidden="true"
+                          title="Влачи за пренареждане"
+                          style="cursor:grab;color:#94a3b8;user-select:none;padding-top:.2rem;">⠿</span>
+                    <div style="flex:1;display:flex;gap:.5rem;flex-wrap:wrap;">
                         <div>
                             <label>Етикет<br>
                                 <input type="text" name="items[{{ $i }}][label]"
@@ -70,9 +78,11 @@
         addBtn.addEventListener('click', () => {
             const div = document.createElement('div');
             div.className = 'menu-item';
-            div.style.cssText = 'border:1px solid #cbd5e1;padding:.75rem;margin-bottom:.5rem;background:#fff;';
+            div.style.cssText = 'display:flex;align-items:flex-start;gap:.5rem;border:1px solid #cbd5e1;padding:.75rem;margin-bottom:.5rem;background:#fff;';
             div.innerHTML = `
-                <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+                <span data-drag-handle aria-hidden="true" title="Влачи за пренареждане"
+                      style="cursor:grab;color:#94a3b8;user-select:none;padding-top:.2rem;">⠿</span>
+                <div style="flex:1;display:flex;gap:.5rem;flex-wrap:wrap;">
                     <div><label>Етикет<br>
                         <input type="text" name="items[${idx}][label]" required maxlength="255" style="width:180px;">
                     </label></div>
@@ -97,6 +107,15 @@
             if (e.target.classList.contains('remove-item')) {
                 e.target.closest('.menu-item').remove();
             }
+        });
+
+        {{-- Re-index item names on submit so the backend receives a clean 0-based array --}}
+        document.getElementById('menu-form').addEventListener('submit', () => {
+            container.querySelectorAll('.menu-item').forEach((item, newIdx) => {
+                item.querySelectorAll('[name]').forEach(el => {
+                    el.name = el.name.replace(/items\[\d+\]/, `items[${newIdx}]`);
+                });
+            });
         });
     })();
     </script>

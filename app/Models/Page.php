@@ -8,6 +8,8 @@ use App\Enums\PageStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * A static page whose visible content is composed entirely of ContentBlocks.
@@ -15,7 +17,15 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 final class Page extends Model
 {
-    use SoftDeletes;
+    use LogsActivity, SoftDeletes;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['title', 'slug', 'status', 'sort_order'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 
     protected $fillable = [
         'uuid',

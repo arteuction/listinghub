@@ -24,7 +24,9 @@
         "@tiptap/extension-placeholder": "^2.11.5",
         "@tiptap/extension-strike": "^2.11.5",
         "@tiptap/extension-text": "^2.11.5",
-        "@tiptap/pm": "^2.11.5"
+        "@tiptap/pm": "^2.11.5",
+        "sortablejs": "^1.15.7",
+        "tom-select": "^2.6.2"
     },
     "devDependencies": {
         "@axe-core/playwright": "^4.12.1",

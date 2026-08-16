@@ -10,6 +10,10 @@
 
     <p>
         <a href="{{ route('admin.pages.edit', $page) }}">← Назад към страницата</a>
+        ·
+        @if ($page->isPublished())
+            <a href="{{ route('pages.show', $page->slug) }}" target="_blank" rel="noopener">Виж публично ↗</a>
+        @endif
     </p>
 
     @include('admin.partials.flash')
@@ -17,12 +21,19 @@
     @if ($blocks->isEmpty())
         <p>Няма блокове. <a href="{{ route('admin.pages.blocks.create', $page) }}">Добави първия.</a></p>
     @else
-        {{-- Drag-and-drop reorder list --}}
-        <ul id="block-list" style="list-style:none;padding:0;" aria-label="Блокове за пренареждане">
+        <ul id="block-list"
+            data-sortable
+            data-sortable-url="{{ route('admin.pages.blocks.reorder', $page) }}"
+            data-sortable-id="uuid"
+            style="list-style:none;padding:0;"
+            aria-label="Блокове за пренареждане">
             @foreach ($blocks as $block)
                 <li data-uuid="{{ $block->uuid }}"
-                    style="display:flex;align-items:center;gap:.75rem;padding:.5rem;border:1px solid #cbd5e1;margin-bottom:.5rem;background:#fff;cursor:grab;">
-                    <span aria-hidden="true" title="Влачи за пренареждане">⠿</span>
+                    style="display:flex;align-items:center;gap:.75rem;padding:.5rem;border:1px solid #cbd5e1;margin-bottom:.5rem;background:#fff;">
+                    <span data-drag-handle
+                          aria-hidden="true"
+                          title="Влачи за пренареждане"
+                          style="cursor:grab;color:#94a3b8;user-select:none;">⠿</span>
                     <span style="flex:1;">
                         <strong>{{ $block->block_type->value }}</strong>
                         <small style="color:#64748b;margin-left:.5rem;">{{ $block->status->value }}</small>
@@ -42,48 +53,6 @@
                 </li>
             @endforeach
         </ul>
-
-        <script>
-        (function () {
-            const list = document.getElementById('block-list');
-            if (!list) return;
-
-            let dragged = null;
-
-            list.addEventListener('dragstart', e => {
-                dragged = e.target.closest('li');
-                dragged.style.opacity = '.4';
-                e.dataTransfer.effectAllowed = 'move';
-            });
-            list.addEventListener('dragend', e => {
-                e.target.closest('li').style.opacity = '';
-                saveOrder();
-            });
-            list.addEventListener('dragover', e => {
-                e.preventDefault();
-                const target = e.target.closest('li');
-                if (target && target !== dragged) {
-                    const rect = target.getBoundingClientRect();
-                    const after = e.clientY > rect.top + rect.height / 2;
-                    list.insertBefore(dragged, after ? target.nextSibling : target);
-                }
-            });
-
-            list.querySelectorAll('li').forEach(li => li.setAttribute('draggable', 'true'));
-
-            function saveOrder() {
-                const ids = Array.from(list.querySelectorAll('li')).map(li => li.dataset.uuid);
-                fetch('{{ route('admin.pages.blocks.reorder', $page) }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content
-                                     || '{{ csrf_token() }}',
-                    },
-                    body: JSON.stringify({ ids }),
-                });
-            }
-        })();
-        </script>
+        <p style="color:#94a3b8;font-size:.8rem;">Влачете редовете за да подредите блоковете. Редът се записва автоматично.</p>
     @endif
 @endsection
