@@ -13,6 +13,12 @@ class E2eAdminSeeder extends Seeder
 {
     public function run(): void
     {
+        if (! app()->environment('local', 'testing')) {
+            $this->command?->error('E2eAdminSeeder is restricted to local and testing environments.');
+
+            return;
+        }
+
         $admin = User::query()->firstOrCreate(
             ['email' => 'e2e-admin@example.com'],
             [
