@@ -14,6 +14,8 @@ use Spatie\Activitylog\Traits\LogsActivity;
 /**
  * A static page whose visible content is composed entirely of ContentBlocks.
  * System pages (is_system = true) are seeded and cannot be deleted.
+ *
+ * @property PageStatus $status
  */
 final class Page extends Model
 {

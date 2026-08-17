@@ -20,6 +20,7 @@ final class CreateTaxonomyTerm
         ?TaxonomyTerm $parent = null,
         ?User $actor = null,
         int $sortOrder = 1000,
+        ?string $icon = null,
     ): TaxonomyTerm {
         if ($parent !== null && ! $taxonomy->is_hierarchical) {
             throw new InvalidArgumentException(
@@ -31,12 +32,13 @@ final class CreateTaxonomyTerm
             throw new InvalidArgumentException('Parent term belongs to a different taxonomy.');
         }
 
-        return DB::transaction(function () use ($taxonomy, $name, $slug, $parent, $actor, $sortOrder): TaxonomyTerm {
+        return DB::transaction(function () use ($taxonomy, $name, $slug, $parent, $actor, $sortOrder, $icon): TaxonomyTerm {
             return TaxonomyTerm::query()->create([
                 'taxonomy_id' => $taxonomy->id,
                 'parent_id' => $parent?->id,
                 'slug' => $slug,
                 'name' => $name,
+                'icon' => $icon,
                 'status' => TaxonomyTermStatus::Published,
                 'sort_order' => max(0, $sortOrder),
                 'created_by' => $actor?->getKey(),

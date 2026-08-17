@@ -75,7 +75,7 @@ class PageContentBlockController extends Controller
             'content.tiptap' => ['nullable', 'array'],
         ]);
 
-        $this->updater->handle($block, ['content' => $data['content'] ?? []], $request->user());
+        $this->updater->handle($block, ['content' => $data['content'] ?? []], $block->version, $request->user());
 
         return redirect()->route('admin.pages.blocks', $page)
             ->with('status', 'Блокът е обновен.');

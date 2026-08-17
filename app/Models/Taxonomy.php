@@ -7,6 +7,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property int $id
+ * @property bool $is_hierarchical
+ * @property bool $allow_multiple
+ */
 final class Taxonomy extends Model
 {
     protected $fillable = [

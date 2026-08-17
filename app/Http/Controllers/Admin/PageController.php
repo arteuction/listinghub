@@ -119,7 +119,7 @@ class PageController extends Controller
     {
         return view('admin.pages.blocks', [
             'page' => $page,
-            'blocks' => $page->contentBlocks()->withTrashed(false)->get(),
+            'blocks' => $page->contentBlocks()->get(),
         ]);
     }
 }
