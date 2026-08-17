@@ -12,6 +12,12 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="h-full bg-slate-50 text-slate-900 antialiased">
+    @php
+        // Header menu from DB — cached per-request; absent on first deploy before seeder runs.
+        $headerMenu = \App\Models\Menu::query()->with(['items' => fn($q) => $q->whereNull('parent_id')->orderBy('sort_order')])->where('handle', 'header')->first();
+        $footerMenu = \App\Models\Menu::query()->with(['items' => fn($q) => $q->whereNull('parent_id')->orderBy('sort_order')])->where('handle', 'footer')->first();
+    @endphp
+
     <a href="#main"
        class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded focus:bg-white focus:px-4 focus:py-2 focus:shadow">
         Към основното съдържание
@@ -22,6 +28,19 @@
             <a href="{{ route('home') }}" class="text-xl font-semibold tracking-tight text-slate-900">
                 {{ config('app.name', 'ListingHub') }}
             </a>
+
+            {{-- Dynamic CMS menu items (header) --}}
+            @if ($headerMenu && $headerMenu->items->isNotEmpty())
+                <nav aria-label="Главно меню" class="hidden sm:flex items-center gap-4 text-sm">
+                    @foreach ($headerMenu->items as $item)
+                        <a href="{{ $item->url }}"
+                           class="text-slate-600 hover:text-slate-900"
+                           @if ($item->open_in_new_tab) target="_blank" rel="noopener noreferrer" @endif>
+                            {{ $item->label }}
+                        </a>
+                    @endforeach
+                </nav>
+            @endif
 
             <form action="{{ route('listings.index') }}" method="GET" role="search"
                   class="order-3 flex w-full gap-2 sm:order-none sm:w-auto sm:flex-1">
@@ -64,6 +83,17 @@
 
     <footer class="mt-16 border-t border-slate-200 bg-white">
         <div class="mx-auto max-w-6xl px-4 py-8 text-sm text-slate-500">
+            @if ($footerMenu && $footerMenu->items->isNotEmpty())
+                <nav aria-label="Footer навигация" class="flex flex-wrap gap-4 mb-4">
+                    @foreach ($footerMenu->items as $item)
+                        <a href="{{ $item->url }}"
+                           class="hover:text-slate-700"
+                           @if ($item->open_in_new_tab) target="_blank" rel="noopener noreferrer" @endif>
+                            {{ $item->label }}
+                        </a>
+                    @endforeach
+                </nav>
+            @endif
             <p>&copy; {{ date('Y') }} {{ config('app.name', 'ListingHub') }} — национален каталог за България.</p>
         </div>
     </footer>

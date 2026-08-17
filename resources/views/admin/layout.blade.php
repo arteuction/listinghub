@@ -3,7 +3,9 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Admin') · {{ config('app.name', 'ListingHub') }}</title>
+    @vite(['resources/css/admin.css', 'resources/js/admin.js'])
     <style>
         body { font-family: system-ui, sans-serif; margin: 0; color: #0f172a; background: #f1f5f9; }
         header { background: #0f172a; color: #e2e8f0; padding: .8rem 1.5rem; display: flex; justify-content: space-between; align-items: center; }
@@ -37,6 +39,9 @@
                 ['admin.moderation.index', 'Модерация', 'admin.moderation.*'],
                 ['admin.listings.index', 'Обяви', 'admin.listings.*'],
                 ['admin.categories.index', 'Категории', 'admin.categories.*'],
+                ['admin.pages.index', 'Страници', 'admin.pages.*'],
+                ['admin.menus.index', 'Менюта', 'admin.menus.*'],
+                ['admin.taxonomy.index', 'Taxonomy', 'admin.taxonomy.*'],
                 ['admin.leads.index', 'Запитвания', 'admin.leads.*'],
                 ['admin.users.index', 'Потребители', 'admin.users.*'],
                 ['admin.settings.edit', 'Настройки', 'admin.settings.*'],

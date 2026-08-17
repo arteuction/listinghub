@@ -114,6 +114,12 @@ class InstallManager
 
         $this->writePendingMarker(6);
 
+        // Shared hosting commonly caps max_execution_time at 30s; migrations
+        // plus the EKATTE settlement seed exceed that and the install dies
+        // halfway (verified against a clean MariaDB 11.4). Lift the limit for
+        // THIS request only — the installer runs once and locks itself out.
+        @set_time_limit(0);
+
         // migrate (--force, non-interactive, NEVER fresh), then seed roles/plans.
         // The seeder is run directly rather than via `migrate --seed`, because
         // the `db:seed` command is not registered in a web/HTTP request context.

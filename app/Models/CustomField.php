@@ -27,8 +27,8 @@ class CustomField extends Model
     use HasFactory;
 
     protected $fillable = [
-        'category_id', 'label', 'key', 'type', 'options', 'is_required', 'sort_order',
-        'searchable', 'filterable', 'sortable',
+        'category_id', 'section_id', 'label', 'key', 'type', 'options', 'is_required', 'sort_order',
+        'searchable', 'filterable', 'sortable', 'placeholder', 'help_text',
     ];
 
     protected function casts(): array
@@ -46,6 +46,11 @@ class CustomField extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function section(): BelongsTo
+    {
+        return $this->belongsTo(FormSection::class);
     }
 
     public function values(): HasMany

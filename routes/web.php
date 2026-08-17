@@ -9,9 +9,14 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\LeadController as AdminLeadController;
 use App\Http\Controllers\Admin\ListingController;
 use App\Http\Controllers\Admin\ListingHoursController as AdminListingHoursController;
+use App\Http\Controllers\Admin\MenuController as AdminMenuController;
 use App\Http\Controllers\Admin\ModerationController;
+use App\Http\Controllers\Admin\PageContentBlockController;
+use App\Http\Controllers\Admin\PageController as AdminPageController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Admin\SeoMetaController as AdminSeoMetaController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\TaxonomyController as AdminTaxonomyController;
 use App\Http\Controllers\Admin\UserController;
 /*
 |--------------------------------------------------------------------------
@@ -43,6 +48,7 @@ use App\Http\Controllers\Site\ClaimController;
 use App\Http\Controllers\Site\HomeController;
 use App\Http\Controllers\Site\LeadController;
 use App\Http\Controllers\Site\ListingController as SiteListingController;
+use App\Http\Controllers\Site\PageController as SitePageController;
 use App\Http\Controllers\Site\ProductController as SiteProductController;
 use App\Http\Controllers\Site\ReviewController;
 use App\Http\Controllers\Site\SettlementLookupController;
@@ -53,6 +59,11 @@ use Illuminate\Support\Facades\Route;
 // Bulgaria-only marketplace. Location narrowing below region level is done
 // with query parameters (?municipality=…&settlement=…) against the canonical
 // region page, so every listing has exactly one indexable browse path.
+// --- Static pages (public, 3.6.2) ---
+// Preview is public-but-token-gated; the token itself is the auth.
+Route::get('/pages/preview', [SitePageController::class, 'preview'])->name('pages.preview');
+Route::get('/pages/{slug}', [SitePageController::class, 'show'])->name('pages.show');
+
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/listings', [SiteListingController::class, 'index'])->name('listings.index');
 Route::get('/categories/{category:slug}', [SiteListingController::class, 'index'])->name('categories.show');
@@ -267,6 +278,61 @@ Route::prefix('admin')->name('admin.')
         Route::get('/users', [UserController::class, 'index'])->name('users.index');
         Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
         Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
+
+        // --- Pages + ContentBlocks (3.6.2) ---
+        Route::prefix('pages')->name('pages.')->group(function () {
+            Route::get('/', [AdminPageController::class, 'index'])->name('index');
+            Route::get('/create', [AdminPageController::class, 'create'])->name('create');
+            Route::post('/', [AdminPageController::class, 'store'])->name('store');
+            Route::get('/{page}/edit', [AdminPageController::class, 'edit'])->name('edit');
+            Route::put('/{page}', [AdminPageController::class, 'update'])->name('update');
+            Route::delete('/{page}', [AdminPageController::class, 'destroy'])->name('destroy');
+            Route::post('/{page}/publish', [AdminPageController::class, 'publish'])->name('publish');
+            Route::post('/{page}/unpublish', [AdminPageController::class, 'unpublish'])->name('unpublish');
+            Route::post('/{page}/preview', [AdminPageController::class, 'preview'])->name('preview');
+
+            // Content blocks within a page
+            Route::prefix('/{page}/blocks')->name('blocks.')->group(function () {
+                Route::get('/', [AdminPageController::class, 'blocks'])->name('index');
+                Route::get('/create', [PageContentBlockController::class, 'create'])->name('create');
+                Route::post('/', [PageContentBlockController::class, 'store'])->name('store');
+                Route::get('/{block}/edit', [PageContentBlockController::class, 'edit'])->name('edit');
+                Route::put('/{block}', [PageContentBlockController::class, 'update'])->name('update');
+                Route::delete('/{block}', [PageContentBlockController::class, 'destroy'])->name('destroy');
+                Route::post('/{block}/publish', [PageContentBlockController::class, 'publish'])->name('publish');
+                Route::post('/reorder', [PageContentBlockController::class, 'reorder'])->name('reorder');
+            });
+
+            // SEO per page
+            Route::get('/{page}/seo', [AdminSeoMetaController::class, 'editForPage'])->name('seo.edit');
+            Route::put('/{page}/seo', [AdminSeoMetaController::class, 'updateForPage'])->name('seo.update');
+        });
+
+        // Shortcut used from page edit: admin.pages.blocks
+        Route::get('/pages/{page}/content-blocks', [AdminPageController::class, 'blocks'])->name('pages.blocks');
+
+        // --- Menus (3.6.2) ---
+        Route::prefix('menus')->name('menus.')->group(function () {
+            Route::get('/', [AdminMenuController::class, 'index'])->name('index');
+            Route::get('/{menu}/edit', [AdminMenuController::class, 'edit'])->name('edit');
+            Route::put('/{menu}', [AdminMenuController::class, 'update'])->name('update');
+        });
+
+        // --- Taxonomy (3.6.2) ---
+        Route::prefix('taxonomy')->name('taxonomy.')->group(function () {
+            Route::get('/', [AdminTaxonomyController::class, 'index'])->name('index');
+            Route::get('/{taxonomy}/terms', [AdminTaxonomyController::class, 'terms'])->name('terms');
+            Route::get('/{taxonomy}/terms/create', [AdminTaxonomyController::class, 'createTerm'])->name('terms.create');
+            Route::post('/{taxonomy}/terms', [AdminTaxonomyController::class, 'storeTerm'])->name('terms.store');
+            Route::get('/{taxonomy}/terms/{term}/edit', [AdminTaxonomyController::class, 'editTerm'])->name('terms.edit');
+            Route::put('/{taxonomy}/terms/{term}', [AdminTaxonomyController::class, 'updateTerm'])->name('terms.update');
+            Route::post('/{taxonomy}/terms/{term}/move', [AdminTaxonomyController::class, 'moveTerm'])->name('terms.move');
+            Route::delete('/{taxonomy}/terms/{term}', [AdminTaxonomyController::class, 'destroyTerm'])->name('terms.destroy');
+        });
+
+        // SEO for taxonomy terms (standalone — reached from term edit)
+        Route::get('/taxonomy/terms/{term}/seo', [AdminSeoMetaController::class, 'editForTerm'])->name('taxonomy.terms.seo.edit');
+        Route::put('/taxonomy/terms/{term}/seo', [AdminSeoMetaController::class, 'updateForTerm'])->name('taxonomy.terms.seo.update');
     });
 
 /*

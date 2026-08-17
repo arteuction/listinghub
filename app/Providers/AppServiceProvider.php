@@ -6,7 +6,10 @@ namespace App\Providers;
 
 use App\Support\InstallationState;
 use App\Support\SqliteUnicode;
+use App\Support\Tiptap\TiptapHtmlRenderer;
+use App\Support\Tiptap\TiptapSanitizer;
 use Illuminate\Database\Events\ConnectionEstablished;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -17,7 +20,7 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        $this->app->singleton(TiptapSanitizer::class, static fn () => new TiptapSanitizer(new TiptapHtmlRenderer));
     }
 
     public function boot(): void
@@ -65,5 +68,11 @@ class AppServiceProvider extends ServiceProvider
 
         // Policies are auto-discovered by Laravel (App\Models\Foo ->
         // App\Policies\FooPolicy).
+
+        // @tiptap($doc) — renders a Tiptap JSON array to sanitized HTML.
+        // Usage: {!! @tiptap($block->content['tiptap'] ?? []) !!}
+        Blade::directive('tiptap', static function (string $expression): string {
+            return "<?php echo app(\\App\\Support\\Tiptap\\TiptapSanitizer::class)->toHtml({$expression} ?? []); ?>";
+        });
     }
 }
