@@ -50,7 +50,7 @@ it('creates a draft block and its first full snapshot atomically', function () {
         ->and($revision->version)->toBe(1)
         ->and($revision->actor_id)->toBe($actor->id)
         ->and($revision->snapshot['uuid'])->toBe($block->uuid)
-        ->and($revision->snapshot['content'])->toBe(cbDocument('Добре дошли'))
+        ->and($revision->snapshot['content'])->toEqual(cbDocument('Добре дошли'))
         ->and($revision->snapshot['schema_version'])->toBe(ContentBlock::SNAPSHOT_SCHEMA_VERSION);
 });
 
@@ -92,7 +92,7 @@ it('increments the version and stores a full snapshot for each real update', fun
 
     expect($updated->version)->toBe(2)
         ->and($updated->block_type)->toBe(ContentBlockType::ImageText)
-        ->and($updated->content)->toBe(cbDocument('Версия две'))
+        ->and($updated->content)->toEqual(cbDocument('Версия две'))
         ->and($revisions)->toHaveCount(2)
         ->and($revisions[1]->operation)->toBe(ContentBlockRevisionOperation::Updated)
         ->and($revisions[1]->reason)->toBe('Редакция на началната секция')
@@ -135,7 +135,7 @@ it('rejects a stale editor without changing data or writing a revision', functio
 
     $fresh = ContentBlock::query()->findOrFail($block->id);
 
-    expect($fresh->content)->toBe(cbDocument('Запазено от първия редактор'))
+    expect($fresh->content)->toEqual(cbDocument('Запазено от първия редактор'))
         ->and($fresh->version)->toBe(2)
         ->and($fresh->revisions()->count())->toBe(2);
 });
@@ -178,7 +178,7 @@ it('rolls back by appending a new version and preserves the complete history', f
         ->and($rolledBack->owner_type)->toBe(Category::class)
         ->and($rolledBack->owner_id)->toBe($owner->id)
         ->and($rolledBack->block_type)->toBe(ContentBlockType::Hero)
-        ->and($rolledBack->content)->toBe(cbDocument('Оригинал'))
+        ->and($rolledBack->content)->toEqual(cbDocument('Оригинал'))
         ->and($revisions)->toHaveCount(4)
         ->and($revisions->pluck('version')->all())->toBe([1, 2, 3, 4])
         ->and($revisions[3]->operation)->toBe(ContentBlockRevisionOperation::RolledBack)

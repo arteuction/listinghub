@@ -23,6 +23,22 @@ final class UpdateContentBlock
 {
     private const ALLOWED_CHANGES = ['block_type', 'content', 'sort_order'];
 
+    /** @param array<string, mixed> $data */
+    private static function sortKeysRecursive(array $data): array
+    {
+        ksort($data);
+
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                $data[$key] = array_is_list($value)
+                    ? array_map(fn ($v) => is_array($v) ? self::sortKeysRecursive($v) : $v, $value)
+                    : self::sortKeysRecursive($value);
+            }
+        }
+
+        return $data;
+    }
+
     public function __construct(private readonly RecordContentBlockRevision $revisions) {}
 
     /** @param array<string, mixed> $changes */
@@ -72,7 +88,18 @@ final class UpdateContentBlock
 
             $locked->fill($normalized);
 
-            // A form re-submit with identical data is not a new historical state.
+            // MySQL normalises JSON key order alphabetically while SQLite
+            // preserves insertion order, making isDirty() unreliable for the
+            // `content` JSON column. Sort keys on both sides before comparing.
+            if ($locked->isDirty('content')) {
+                $original = self::sortKeysRecursive((array) $locked->getOriginal('content'));
+                $current = self::sortKeysRecursive((array) $locked->content);
+
+                if ($original === $current) {
+                    $locked->content = $locked->getOriginal('content');
+                }
+            }
+
             if (! $locked->isDirty()) {
                 return $locked;
             }
