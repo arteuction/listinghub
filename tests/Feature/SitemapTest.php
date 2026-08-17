@@ -66,6 +66,7 @@ it('includes published listings', function () {
     $country = Country::factory()->create();
     $region = Region::factory()->create(['country_id' => $country->id]);
     $municipality = Municipality::factory()->create(['region_id' => $region->id]);
+    $municipality = Municipality::factory()->create(['region_id' => $region->id]);
     $settlement = Settlement::factory()->create(['municipality_id' => $municipality->id]);
 
     $listing = Listing::factory()->create([
@@ -88,6 +89,7 @@ it('excludes draft listings', function () {
     $user = User::factory()->create();
     $country = Country::factory()->create();
     $region = Region::factory()->create(['country_id' => $country->id]);
+    $municipality = Municipality::factory()->create(['region_id' => $region->id]);
     $municipality = Municipality::factory()->create(['region_id' => $region->id]);
     $settlement = Settlement::factory()->create(['municipality_id' => $municipality->id]);
 
