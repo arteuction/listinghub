@@ -29,7 +29,7 @@
                 <p class="mt-1 text-sm text-slate-600">
                     Категорията определя допълнителните полета на обявата.
                 </p>
-                <select id="category" name="category" required
+                <select id="category" name="category" required data-tom-select
                         class="mt-3 w-full rounded-md border border-slate-300 px-3 py-2">
                     <option value="">—</option>
                     @foreach ($categories as $option)
