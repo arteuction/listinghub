@@ -29,7 +29,7 @@
 
         <p>
             <label for="parent_id">Родителска категория</label><br>
-            <select id="parent_id" name="parent_id">
+            <select id="parent_id" name="parent_id" data-tom-select>
                 <option value="">— няма (основна) —</option>
                 @foreach ($parents as $parent)
                     <option value="{{ $parent->id }}" @selected((int) old('parent_id', $category->parent_id ?? 0) === $parent->id)>
