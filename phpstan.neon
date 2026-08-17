@@ -8,6 +8,7 @@ parameters:
         - database
     level: 5
     excludePaths:
+        - app/Filament
         - vendor
 
     # Laravel models type cast attributes through PHPDoc, so PHPStan reads

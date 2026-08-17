@@ -1,13 +1,19 @@
 {
     "name": "listinghub/platform",
     "type": "project",
-    "description": "ListingHub — directory / listing / classified platform (Laravel 13).",
-    "keywords": ["laravel", "directory", "listings", "classifieds"],
+    "description": "ListingHub \u2014 directory / listing / classified platform (Laravel 13).",
+    "keywords": [
+        "laravel",
+        "directory",
+        "listings",
+        "classifieds"
+    ],
     "license": "proprietary",
     "require": {
         "php": "^8.3",
         "ext-json": "*",
         "ext-pdo": "*",
+        "filament/filament": "^5.0",
         "laravel/framework": "^13.0",
         "laravel/socialite": "^5.16",
         "laravel/tinker": "^3.0",
@@ -45,7 +51,8 @@
     },
     "scripts": {
         "post-autoload-dump": [
-            "@php artisan package:discover --ansi"
+            "@php artisan package:discover --ansi",
+            "@php artisan filament:upgrade"
         ],
         "post-root-package-install": [
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
