@@ -6,6 +6,7 @@ use App\Enums\ListingStatus;
 use App\Models\Category;
 use App\Models\Country;
 use App\Models\Listing;
+use App\Models\Municipality;
 use App\Models\Region;
 use App\Models\Settlement;
 use App\Models\User;
@@ -64,7 +65,8 @@ it('includes published listings', function () {
     $user = User::factory()->create();
     $country = Country::factory()->create();
     $region = Region::factory()->create(['country_id' => $country->id]);
-    $municipality = \App\Models\Municipality::factory()->create(['region_id' => $region->id]);
+    $municipality = Municipality::factory()->create(['region_id' => $region->id]);
+    $municipality = Municipality::factory()->create(['region_id' => $region->id]);
     $settlement = Settlement::factory()->create(['municipality_id' => $municipality->id]);
 
     $listing = Listing::factory()->create([
@@ -87,7 +89,8 @@ it('excludes draft listings', function () {
     $user = User::factory()->create();
     $country = Country::factory()->create();
     $region = Region::factory()->create(['country_id' => $country->id]);
-    $municipality = \App\Models\Municipality::factory()->create(['region_id' => $region->id]);
+    $municipality = Municipality::factory()->create(['region_id' => $region->id]);
+    $municipality = Municipality::factory()->create(['region_id' => $region->id]);
     $settlement = Settlement::factory()->create(['municipality_id' => $municipality->id]);
 
     Listing::factory()->create([

@@ -7,11 +7,8 @@ use App\Actions\Pages\CreatePage;
 use App\Actions\Pages\PublishPage;
 use App\Enums\ContentBlockStatus;
 use App\Enums\ContentBlockType;
-use App\Enums\PageStatus;
-use App\Models\Page;
 use App\Models\PreviewToken;
 use App\Models\SeoMeta;
-use App\Models\User;
 
 beforeEach(function () {
     @mkdir(storage_path('app'), 0777, true);
@@ -128,7 +125,7 @@ it('shows empty-state when page has no blocks', function () {
         ->assertSeeText('няма съдържание');
 });
 
-// ─── Preview ────────────────────────────────────────────────────────────────
+// ─── Preview ──────────────────────────────────────────────────────────[...]
 
 it('renders a draft page via a valid preview token', function () {
     $page = app(CreatePage::class)->handle('Preview Draft', 'preview-draft');

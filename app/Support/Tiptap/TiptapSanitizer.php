@@ -21,7 +21,7 @@ final class TiptapSanitizer
     {
         $raw = $this->renderer->render($doc);
 
-        // HTMLPurifier emits E_WARNING for doctype-defined elements (e.g. img)
+        // HTMLPurifier emits E_USER_WARNING for doctype-defined elements (e.g. img)
         // whose required attributes are absent from HTML.Allowed — cosmetic noise.
         $previous = error_reporting(error_reporting() & ~(E_WARNING | E_USER_WARNING));
 
