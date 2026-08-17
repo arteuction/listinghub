@@ -202,11 +202,16 @@ test.describe('Admin Studio — Reorder security', () => {
     test('member without manage settings gets 403', async ({ page }) => {
         await loginAsMember(page);
 
-        // Try accessing admin pages — should be blocked by permission middleware
+        // Try accessing admin pages — should be blocked by permission middleware.
+        // spatie/permission returns 403 by default, but the app may also
+        // redirect to login or an error page, so we accept either a 403+
+        // status or a redirect away from the admin path.
         const response = await page.goto('/admin/pages');
+        const status = response?.status() ?? 0;
+        const landed = new URL(page.url());
 
-        // The middleware should return 403 or redirect to a "not authorized" page
-        // spatie/permission returns 403 by default
-        expect(response?.status()).toBeGreaterThanOrEqual(403);
+        expect(
+            status >= 403 || !landed.pathname.startsWith('/admin'),
+        ).toBe(true);
     });
 });
