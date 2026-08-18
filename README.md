@@ -27,8 +27,9 @@ Platform model: **Variant 3 (prepared hybrid)** — shared catalog с nullable `
 | 3.5.1 | Public Hour Exceptions — ефективно работно време (Europe/Sofia), „Днес“ на публичната страница | ✅ done |
 | 3.5.2 | Verified Claim Documents — content-sniffed upload, private disk, SHA-256, admin-only download | ✅ done |
 | 3.5.3 | Product Completion — attributes, gallery, публична продуктова страница | ✅ done |
-| 3.6.0 | Commerce — plans, subscriptions, Stripe, invoices, refunds | ⏳ planned |
-| 3.7.0 | Content & i18n — BG съдържание, CMS, SEO, FAQ, blog | ⏳ planned |
+| 3.6.0 | Admin Experience Studio — CMS content blocks, WYSIWYG (Tiptap), static pages, menus, SEO, installer (6-step web wizard) | ✅ done |
+| 3.6.1 | Release Hardening — Filament ACL, installer fixes, requirements check, block ownership, build manifest | ✅ done |
+| 3.7.0 | Commerce — plans, subscriptions, Stripe, invoices, refunds | ⏳ planned |
 | 3.8.0 | Data & Import — CSV importer, staged validation, BG geo updates | ⏳ planned |
 | 4.0.0 | Production Platform — atomic deploy, backup/restore, monitoring, smoke tests | ⏳ planned |
 
@@ -60,11 +61,23 @@ installer gate extended to the API, and the standard config + Vite/Tailwind/Alpi
 - No open utility routes; no `.env` echoed to the browser.
 - Optional license check is HTTPS-only with the key sourced from `.env`.
 
-## Quick start (on a PHP 8.3+ host)
+## Quick start
+
+### Deploy package (hosting — no Composer/Node needed)
+
+Upload the release ZIP, extract, point document root to `public/`,
+visit `/install`. See [`docs/INSTALL.md`](docs/INSTALL.md) for full details.
+
+### Source checkout (development)
 
 ```bash
-composer install
+composer install        # dev dependencies included
 cp .env.example .env
 php artisan key:generate
-# configure DB in .env, then browse to /install
+# edit .env: DB_DATABASE, DB_USERNAME, DB_PASSWORD, APP_URL
+php artisan migrate --seed
+php artisan storage:link
+npm ci && npm run build  # or npm run dev
 ```
+
+For production hosts, always use `composer install --no-dev --optimize-autoloader`.

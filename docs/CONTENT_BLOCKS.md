@@ -1,6 +1,6 @@
 # Content blocks and revision contract
 
-Status: **3.6.0A foundation implemented; admin UI not yet wired.**
+Status: **3.6.1 — foundation, admin CRUD, revision system, and public rendering implemented.**
 
 `ContentBlock` is the common content primitive for the Admin Experience Studio.
 It replaces the legacy product's monolithic page columns with structured,

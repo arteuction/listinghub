@@ -6,12 +6,16 @@ production dependencies and built assets — the path for hosting) and a
 
 ## 1. Requirements
 
-- PHP **8.3+** with: `pdo_mysql`, `mbstring`, `openssl`, `tokenizer`, `ctype`,
-  `json`, `curl`, `fileinfo`, `gd`
+- PHP **8.3+** with extensions: `pdo`, `pdo_mysql`, `mbstring`, `openssl`,
+  `tokenizer`, `ctype`, `json`, `curl`, `fileinfo`, `gd` (with WebP:
+  `imagewebp()`), `intl`, `dom`, `libxml`, `xmlreader`, `exif`, `zip`, `zlib`
 - MySQL 8 / MariaDB 10.6+ (the runtime gate in this repo runs MariaDB 11.4)
 - The web server's document root MUST point at `public/` — never expose the
   project root through `public_html`, or `.env`, `storage/` and the whole
   codebase become downloadable.
+
+The installer checks all of the above before proceeding. Missing extensions
+are shown on the requirements page with exact names.
 
 ## 2. Installing the deploy package (hosting)
 
