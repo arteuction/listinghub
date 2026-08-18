@@ -99,7 +99,7 @@ verify_package() {
     if [[ -f BUILD.json ]]; then
         pass "BUILD.json present"
         local version
-        version=$(grep -oP '"version"\s*:\s*"\K[^"]+' BUILD.json 2>/dev/null || true)
+        version=$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' BUILD.json 2>/dev/null | head -1)
         [[ -n "$version" ]] && pass "Version: $version"          || warn "No version in BUILD.json"
     else
         warn "BUILD.json missing (not a release build)"
@@ -126,14 +126,14 @@ verify_installed() {
     say "2. Configuration"
     [[ -f .env ]]            && pass ".env exists"               || { fail ".env missing"; return; }
 
-    grep -qP '^APP_KEY=.+' .env \
+    grep -q '^APP_KEY=.\+' .env \
                              && pass "APP_KEY is set"             || fail "APP_KEY is empty"
 
-    grep -qP '^APP_DEBUG=false' .env \
+    grep -q '^APP_DEBUG=false' .env \
                              && pass "APP_DEBUG=false"            || warn "APP_DEBUG is not false"
 
     local app_url
-    app_url=$(grep -oP '^APP_URL=\K.*' .env | tr -d '"' || true)
+    app_url=$(sed -n 's/^APP_URL=//p' .env | tr -d '"' || true)
     if [[ "$app_url" == https://* ]]; then
         pass "APP_URL uses HTTPS"
     else
