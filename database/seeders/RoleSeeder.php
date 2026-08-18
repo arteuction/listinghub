@@ -18,6 +18,7 @@ class RoleSeeder extends Seeder
         $permissions = [
             'manage listings', 'moderate listings',
             'manage products',
+            'manage categories',
             'manage plans', 'manage payments',
             'manage users',
             'manage settings', 'manage content',

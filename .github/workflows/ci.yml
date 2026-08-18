@@ -53,8 +53,8 @@ jobs:
       - name: Install JS dependencies
         run: npm ci
 
-      - name: Build assets
-        run: npm run build
+      - name: Build assets and check bundle budgets
+        run: npm run build:ci
 
   bg-datasets:
     name: BG dataset validation

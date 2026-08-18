@@ -1,36 +1,13 @@
-import Sortable from 'sortablejs';
-import TomSelect from 'tom-select';
+async function bootFeatures() {
+    if (document.querySelector('[data-sortable]:not([data-initialized="sortable"])')) {
+        const { initSortable } = await import('./features/sortable.js');
+        initSortable();
+    }
+    if (document.querySelector('[data-tom-select]:not([data-initialized="tom-select"])')) {
+        const { initTomSelect } = await import('./features/tom-select.js');
+        initTomSelect();
+    }
+}
 
-window.Sortable = Sortable;
-window.TomSelect = TomSelect;
-
-document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('[data-sortable]').forEach(el => {
-        const url = el.dataset.sortableUrl;
-        const idAttr = el.dataset.sortableId ?? 'uuid';
-
-        Sortable.create(el, {
-            animation: 150,
-            handle: '[data-drag-handle]',
-            onEnd() {
-                if (!url) return;
-                const ids = Array.from(el.children).map(li => li.dataset[idAttr] ?? li.dataset.uuid);
-                fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '',
-                    },
-                    body: JSON.stringify({ ids }),
-                });
-            },
-        });
-    });
-
-    document.querySelectorAll('[data-tom-select]').forEach(el => {
-        const opts = {};
-        if (el.dataset.tomSelectCreate) opts.create = true;
-        if (el.multiple) opts.plugins = ['remove_button'];
-        new TomSelect(el, opts);
-    });
-});
+document.addEventListener('DOMContentLoaded', bootFeatures);
+document.addEventListener('livewire:navigated', bootFeatures);
