@@ -126,6 +126,10 @@ class InstallManager
         Artisan::call('migrate', ['--force' => true]);
         app(DatabaseSeeder::class)->setContainer(app())->run();
 
+        // Create public/storage → storage/app/public symlink so uploaded
+        // images are web-accessible without shell access.
+        Artisan::call('storage:link', ['--force' => true]);
+
         $verified = false;
 
         DB::transaction(function () use ($admin, &$verified): void {

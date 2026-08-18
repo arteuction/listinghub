@@ -291,7 +291,7 @@ Route::prefix('admin')->name('admin.')
             Route::post('/{page}/unpublish', [AdminPageController::class, 'unpublish'])->name('unpublish');
             Route::post('/{page}/preview', [AdminPageController::class, 'preview'])->name('preview');
 
-            // Content blocks within a page
+            // Content blocks within a page — block must belong to the page
             Route::prefix('/{page}/blocks')->name('blocks.')->group(function () {
                 Route::get('/', [AdminPageController::class, 'blocks'])->name('index');
                 Route::get('/create', [PageContentBlockController::class, 'create'])->name('create');
@@ -301,7 +301,7 @@ Route::prefix('admin')->name('admin.')
                 Route::delete('/{block}', [PageContentBlockController::class, 'destroy'])->name('destroy');
                 Route::post('/{block}/publish', [PageContentBlockController::class, 'publish'])->name('publish');
                 Route::post('/reorder', [PageContentBlockController::class, 'reorder'])->name('reorder');
-            });
+            })->scopeBindings();
 
             // SEO per page
             Route::get('/{page}/seo', [AdminSeoMetaController::class, 'editForPage'])->name('seo.edit');
