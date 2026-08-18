@@ -1,0 +1,159 @@
+name: Release Build
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Build without creating a GitHub release'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build deploy archive
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_mysql, mbstring, openssl, tokenizer, ctype, json, curl, fileinfo, gd, intl, dom, libxml, xmlreader, exif, zip, zlib
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install Composer (no-dev)
+        run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+
+      - name: Build Vite assets
+        run: |
+          npm ci --ignore-scripts
+          npm run build
+
+      - name: Determine version
+        id: version
+        run: |
+          VERSION=$(grep -oP "(?<='version' => ')[^']+" config/listinghub.php)
+          COMMIT_SHA=$(git rev-parse HEAD)
+          COMMIT_SHORT=$(git rev-parse --short HEAD)
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "commit=${COMMIT_SHA}" >> "$GITHUB_OUTPUT"
+          echo "commit_short=${COMMIT_SHORT}" >> "$GITHUB_OUTPUT"
+          echo "Version: ${VERSION}, Commit: ${COMMIT_SHORT}"
+
+      - name: Generate BUILD.json
+        run: |
+          cat > BUILD.json <<MANIFEST
+          {
+              "version": "${{ steps.version.outputs.version }}",
+              "commit": "${{ steps.version.outputs.commit }}",
+              "commit_short": "${{ steps.version.outputs.commit_short }}",
+              "built_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+              "php_min": "8.3.0",
+              "laravel": "13.x"
+          }
+          MANIFEST
+          cat BUILD.json
+
+      - name: Assemble deploy directory
+        run: |
+          WRAPPER="listinghub-${{ steps.version.outputs.version }}"
+          STAGING="/tmp/${WRAPPER}"
+          mkdir -p "${STAGING}"
+
+          # Copy app code (excludes .git, node_modules via rsync)
+          rsync -a \
+            --exclude='.git' \
+            --exclude='node_modules' \
+            --exclude='tests' \
+            --exclude='.github' \
+            --exclude='.env' \
+            --exclude='database/database.sqlite' \
+            --exclude='storage/app/installed.lock' \
+            --exclude='storage/app/installation.running' \
+            --exclude='storage/app/installation.pending' \
+            --exclude='storage/app/purifier' \
+            --exclude='phpstan.neon' \
+            --exclude='phpstan-baseline.neon' \
+            --exclude='deptrac.yaml' \
+            --exclude='pint.json' \
+            --exclude='phpunit.xml' \
+            --exclude='vite.config.js' \
+            --exclude='tailwind.config.js' \
+            --exclude='postcss.config.js' \
+            --exclude='package.json' \
+            --exclude='package-lock.json' \
+            --exclude='playwright.config.ts' \
+            --exclude='lefthook.yml' \
+            --exclude='lighthouserc.json' \
+            --exclude='renovate.json' \
+            ./ "${STAGING}/"
+
+          # Ensure writable dirs with .gitkeep
+          for dir in storage/app storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache; do
+            mkdir -p "${STAGING}/${dir}"
+            touch "${STAGING}/${dir}/.gitkeep"
+          done
+
+          echo "STAGING=${STAGING}" >> "$GITHUB_ENV"
+          echo "WRAPPER=${WRAPPER}" >> "$GITHUB_ENV"
+
+      - name: Normalize ownership and timestamps
+        run: |
+          # Deterministic: all files owned by root:root, mtime = commit date
+          COMMIT_DATE=$(git log -1 --format=%cI)
+          find "${STAGING}" -exec touch -d "${COMMIT_DATE}" {} +
+
+      - name: Create tar.gz with wrapper directory
+        run: |
+          cd /tmp
+          tar czf "/tmp/${WRAPPER}.tar.gz" \
+            --owner=0 --group=0 \
+            --sort=name \
+            "${WRAPPER}"
+
+      - name: Create ZIP with wrapper directory
+        run: |
+          cd /tmp
+          zip -r -X "/tmp/${WRAPPER}.zip" "${WRAPPER}"
+
+      - name: Generate checksums
+        id: checksums
+        run: |
+          cd /tmp
+          sha256sum "${WRAPPER}.tar.gz" "${WRAPPER}.zip" > "${WRAPPER}.sha256"
+          cat "${WRAPPER}.sha256"
+          echo "tarball=${WRAPPER}.tar.gz" >> "$GITHUB_OUTPUT"
+          echo "zipball=${WRAPPER}.zip" >> "$GITHUB_OUTPUT"
+          echo "checksums=${WRAPPER}.sha256" >> "$GITHUB_OUTPUT"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploy-archives
+          path: |
+            /tmp/${{ env.WRAPPER }}.tar.gz
+            /tmp/${{ env.WRAPPER }}.zip
+            /tmp/${{ env.WRAPPER }}.sha256
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v') && !inputs.dry_run
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            /tmp/${{ env.WRAPPER }}.tar.gz
+            /tmp/${{ env.WRAPPER }}.zip
+            /tmp/${{ env.WRAPPER }}.sha256
+          generate_release_notes: true
