@@ -11,6 +11,7 @@ use App\Actions\Content\UpdateContentBlock;
 use App\Enums\ContentBlockStatus;
 use App\Enums\ContentBlockType;
 use App\Http\Controllers\Controller;
+use App\Support\Content\BlockSchema;
 use App\Models\ContentBlock;
 use App\Models\Page;
 use Illuminate\Http\JsonResponse;
@@ -46,18 +47,17 @@ class PageContentBlockController extends Controller
 
     public function store(Request $request, Page $page): RedirectResponse
     {
-        $data = $request->validate([
+        $request->validate([
             'block_type' => ['required', 'string'],
-            'content' => ['nullable', 'array'],
-            'content.tiptap' => ['nullable', 'array'],
-            'content.title' => ['nullable', 'string', 'max:255'],
-            'content.subtitle' => ['nullable', 'string', 'max:500'],
-            'content.cta_text' => ['nullable', 'string', 'max:100'],
-            'content.cta_url' => ['nullable', 'string', 'max:2048', 'regex:/^(\/[^\s]*|https:\/\/[^\s]+)$/'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
         ]);
 
-        $type = ContentBlockType::from($data['block_type']);
+        $type = ContentBlockType::from($request->input('block_type'));
+
+        $data = $request->validate(array_merge(
+            ['block_type' => ['required', 'string'], 'sort_order' => ['nullable', 'integer', 'min:0']],
+            BlockSchema::validationRules($type),
+        ));
 
         $this->creator->handle(
             type: $type,
@@ -86,10 +86,9 @@ class PageContentBlockController extends Controller
     {
         $this->ensureOwnership($page, $block);
 
-        $data = $request->validate([
-            'content' => ['nullable', 'array'],
-            'content.tiptap' => ['nullable', 'array'],
-        ]);
+        $data = $request->validate(
+            BlockSchema::validationRules($block->block_type),
+        );
 
         $this->updater->handle($block, ['content' => $data['content'] ?? []], $block->version, $request->user());
 

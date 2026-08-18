@@ -9,6 +9,11 @@ use App\Enums\ContentBlockType;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 
+function validRichText(): array
+{
+    return ['tiptap' => ['type' => 'doc', 'content' => []]];
+}
+
 beforeEach(function () {
     @mkdir(storage_path('app'), 0777, true);
     touch(storage_path('app/installed.lock'));
@@ -32,7 +37,7 @@ it('stores a new content block via admin', function () {
     $this->actingAs($this->admin)
         ->post(route('admin.pages.blocks.store', $this->page), [
             'block_type' => ContentBlockType::RichText->value,
-            'content' => ['tiptap' => ['type' => 'doc', 'content' => []]],
+            'content' => validRichText(),
             'sort_order' => 500,
         ])
         ->assertRedirect();
@@ -57,7 +62,7 @@ it('stores a hero block via action', function () {
 
 it('routes to the block edit form', function () {
     $block = app(CreateContentBlock::class)->handle(
-        ContentBlockType::RichText, [], $this->page, actor: $this->admin,
+        ContentBlockType::RichText, validRichText(), $this->page, actor: $this->admin,
     );
 
     $response = $this->actingAs($this->admin)
@@ -70,7 +75,7 @@ it('routes to the block edit form', function () {
 it('updates a content block', function () {
     $block = app(CreateContentBlock::class)->handle(
         ContentBlockType::RichText,
-        ['tiptap' => ['type' => 'doc', 'content' => []]],
+        validRichText(),
         $this->page,
         actor: $this->admin,
     );
@@ -87,7 +92,7 @@ it('updates a content block', function () {
 
 it('deletes a content block', function () {
     $block = app(CreateContentBlock::class)->handle(
-        ContentBlockType::RichText, [], $this->page, actor: $this->admin,
+        ContentBlockType::RichText, validRichText(), $this->page, actor: $this->admin,
     );
 
     $this->actingAs($this->admin)
@@ -99,7 +104,7 @@ it('deletes a content block', function () {
 
 it('publishes a content block', function () {
     $block = app(CreateContentBlock::class)->handle(
-        ContentBlockType::RichText, [], $this->page, actor: $this->admin,
+        ContentBlockType::RichText, validRichText(), $this->page, actor: $this->admin,
     );
 
     expect($block->status)->toBe(ContentBlockStatus::Draft);
@@ -123,8 +128,8 @@ it('rejects block creation with an invalid block_type', function () {
 });
 
 it('reorders blocks via JSON endpoint', function () {
-    $a = app(CreateContentBlock::class)->handle(ContentBlockType::RichText, [], $this->page, sortOrder: 1000);
-    $b = app(CreateContentBlock::class)->handle(ContentBlockType::RichText, [], $this->page, sortOrder: 2000);
+    $a = app(CreateContentBlock::class)->handle(ContentBlockType::RichText, validRichText(), $this->page, sortOrder: 1000);
+    $b = app(CreateContentBlock::class)->handle(ContentBlockType::RichText, validRichText(), $this->page, sortOrder: 2000);
 
     $this->actingAs($this->admin)
         ->postJson(route('admin.pages.blocks.reorder', $this->page), [
