@@ -1,131 +1,285 @@
 #!/usr/bin/env bash
+# ListingHub verification script.
 #
-# ListingHub — runtime verification gate.
+# Three modes:
+#   ./verify.sh --package    Archive integrity (pre-install)
+#   ./verify.sh --installed  Runtime health (post-install)
+#   ./verify.sh              (no args) Legacy: auto-detect source vs package
 #
-# Works in TWO modes:
-#   1. Deploy package (no .git, no dev deps): checks PHP, extensions,
-#      writable dirs, vendor autoload, Vite manifest, BUILD.json.
-#   2. Source checkout (has .git + dev deps): full verify including
-#      composer validate, migrate:fresh --seed, and test suite.
-#
-# Exits non-zero on the first failing command.
-# Safe: uses throwaway SQLite + APP_ENV=testing; never modifies .env.
-#
-set -Eeuo pipefail
+set -euo pipefail
 
-say()  { printf '\n\033[1;36m== %s ==\033[0m\n' "$1"; }
-fail() { printf '\n\033[1;31m!! %s\033[0m\n' "$1" >&2; exit 1; }
-pass() { printf '   \033[32m✓\033[0m %s\n' "$1"; }
-warn() { printf '   \033[33m⚠\033[0m %s\n' "$1"; }
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR"
 
-# --- 0. toolchain ---------------------------------------------------------
-say "0. Toolchain"
-command -v php >/dev/null || fail "php not found on PATH"
-php -r 'exit(version_compare(PHP_VERSION, "8.3.0", ">=") ? 0 : 1);' \
-  || fail "PHP 8.3+ required, found $(php -r 'echo PHP_VERSION;')"
-pass "PHP $(php -r 'echo PHP_VERSION;')"
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[1;36m'
+NC='\033[0m'
 
-# --- 1. Required PHP extensions ------------------------------------------
-say "1. PHP extensions"
-REQUIRED_EXTS="pdo pdo_mysql mbstring openssl tokenizer ctype json curl fileinfo gd intl dom libxml xmlreader exif zip zlib"
-ALL_OK=true
-for ext in $REQUIRED_EXTS; do
-    if php -m 2>/dev/null | grep -qi "^${ext}$"; then
-        pass "ext-${ext}"
+PASS=0
+FAIL=0
+WARN=0
+
+say()  { printf "\n${CYAN}== %s ==${NC}\n" "$1"; }
+pass() { printf "   ${GREEN}✓${NC} %s\n" "$1"; ((PASS++)); }
+fail() { printf "   ${RED}✗${NC} %s\n" "$1"; ((FAIL++)); }
+warn() { printf "   ${YELLOW}⚠${NC} %s\n" "$1"; ((WARN++)); }
+die()  { printf "\n${RED}!! %s${NC}\n" "$1" >&2; exit 1; }
+
+PHP_BIN="${PHP_BIN:-php}"
+
+# --- Shared: toolchain check --------------------------------------------------
+
+check_php() {
+    command -v "$PHP_BIN" &>/dev/null || die "PHP not found on PATH"
+    local php_ver
+    php_ver=$("$PHP_BIN" -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')
+    if [[ "$(printf '%s\n' "8.3" "$php_ver" | sort -V | head -1)" == "8.3" ]]; then
+        pass "PHP $("$PHP_BIN" -r 'echo PHP_VERSION;')"
     else
-        printf '   \033[31m✗\033[0m ext-%s MISSING\n' "$ext"
-        ALL_OK=false
+        fail "PHP 8.3+ required, found $php_ver"
     fi
-done
-# Function check
-if php -r 'exit(function_exists("imagewebp") ? 0 : 1);'; then
-    pass "imagewebp()"
-else
-    printf '   \033[31m✗\033[0m imagewebp() MISSING (GD compiled without WebP)\n'
-    ALL_OK=false
-fi
-$ALL_OK || fail "Missing PHP extensions — install them and re-run"
+}
 
-# --- 2. File structure ----------------------------------------------------
-say "2. File structure"
-[ -f vendor/autoload.php ] || fail "vendor/autoload.php missing — run composer install"
-pass "vendor/autoload.php"
-
-[ -f public/build/manifest.json ] || warn "public/build/manifest.json missing — Vite assets not built"
-[ -f public/build/manifest.json ] && pass "Vite manifest"
-
-if [ -f BUILD.json ]; then
-    pass "BUILD.json present"
-    cat BUILD.json
-else
-    warn "BUILD.json not found (not a release build)"
-fi
-
-# Writable directories
-for dir in storage/app storage/framework storage/logs bootstrap/cache; do
-    if [ -w "$dir" ]; then
-        pass "$dir/ writable"
+check_extensions() {
+    local REQUIRED_EXTS="pdo pdo_mysql mbstring openssl tokenizer ctype json curl fileinfo gd intl dom libxml xmlreader exif zip zlib"
+    for ext in $REQUIRED_EXTS; do
+        if "$PHP_BIN" -m 2>/dev/null | grep -qi "^${ext}$"; then
+            pass "ext-${ext}"
+        else
+            fail "ext-${ext} MISSING"
+        fi
+    done
+    if "$PHP_BIN" -r 'exit(function_exists("imagewebp") ? 0 : 1);' 2>/dev/null; then
+        pass "imagewebp()"
     else
-        printf '   \033[31m✗\033[0m %s/ NOT writable\n' "$dir"
+        fail "imagewebp() MISSING (GD compiled without WebP)"
     fi
-done
+}
 
-# --- 3. Detect mode -------------------------------------------------------
-IS_SOURCE=false
-if [ -d .git ] && command -v composer >/dev/null; then
-    IS_SOURCE=true
-fi
+# --- Package verification (pre-install) ---------------------------------------
 
-if $IS_SOURCE; then
-    say "3. Source checkout — full verification"
+verify_package() {
+    say "Package verification"
 
-    # --- record .env checksum so we can prove we never touched it ----------
-    ENV_SUM_BEFORE=""
-    if [ -f .env ]; then
-        ENV_SUM_BEFORE="$(cksum .env)"
+    say "1. Toolchain"
+    check_php
+    check_extensions
+
+    say "2. Archive structure"
+    [[ -f artisan ]]         && pass "artisan exists"             || fail "artisan missing"
+    [[ -d vendor ]]          && pass "vendor/ present"            || fail "vendor/ missing"
+    [[ -f vendor/autoload.php ]] && pass "vendor/autoload.php"    || fail "vendor/autoload.php missing"
+    [[ -d public/build ]]    && pass "public/build/ present"      || fail "public/build/ missing"
+    [[ -f public/build/manifest.json ]] && pass "Vite manifest"   || fail "Vite manifest missing"
+    [[ -f .env.example ]]    && pass ".env.example present"       || fail ".env.example missing"
+    [[ -f composer.json ]]   && pass "composer.json present"      || fail "composer.json missing"
+
+    say "3. Clean state"
+    [[ ! -f .env ]]          && pass ".env absent (clean)"        || fail ".env found — package contains secrets"
+    [[ ! -f storage/app/installed.lock ]] \
+                             && pass "No installed.lock"          || fail "installed.lock found — pre-installed"
+    [[ ! -d node_modules ]]  && pass "No node_modules/"           || warn "node_modules/ present"
+    [[ ! -d .git ]]          && pass "No .git/"                   || warn ".git/ present"
+    [[ ! -d tests ]]         && pass "No tests/"                  || warn "tests/ present"
+    [[ ! -f database/database.sqlite ]] \
+                             && pass "No SQLite DB"               || fail "SQLite database found"
+
+    local has_logs=0
+    for f in storage/logs/*.log; do [[ -f "$f" ]] && has_logs=1 && break; done
+    [[ $has_logs -eq 0 ]]    && pass "No log files"              || fail "Log files in storage/logs/"
+
+    say "4. Directory scaffold"
+    for dir in storage/app storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache; do
+        [[ -d "$dir" ]]      && pass "$dir/"                     || fail "$dir/ missing"
+    done
+
+    say "5. Build metadata"
+    if [[ -f BUILD.json ]]; then
+        pass "BUILD.json present"
+        local version
+        version=$(grep -oP '"version"\s*:\s*"\K[^"]+' BUILD.json 2>/dev/null || true)
+        [[ -n "$version" ]] && pass "Version: $version"          || warn "No version in BUILD.json"
+    else
+        warn "BUILD.json missing (not a release build)"
     fi
+
+    # Checksum verification (if SHA256SUMS exists alongside the archive)
+    if [[ -f SHA256SUMS ]]; then
+        if sha256sum -c SHA256SUMS --quiet 2>/dev/null; then
+            pass "SHA256 checksums valid"
+        else
+            fail "SHA256 checksum mismatch"
+        fi
+    fi
+}
+
+# --- Installed verification (post-install) ------------------------------------
+
+verify_installed() {
+    say "Installation verification"
+
+    say "1. Toolchain"
+    check_php
+
+    say "2. Configuration"
+    [[ -f .env ]]            && pass ".env exists"               || { fail ".env missing"; return; }
+
+    grep -qP '^APP_KEY=.+' .env \
+                             && pass "APP_KEY is set"             || fail "APP_KEY is empty"
+
+    grep -qP '^APP_DEBUG=false' .env \
+                             && pass "APP_DEBUG=false"            || warn "APP_DEBUG is not false"
+
+    local app_url
+    app_url=$(grep -oP '^APP_URL=\K.*' .env | tr -d '"' || true)
+    if [[ "$app_url" == https://* ]]; then
+        pass "APP_URL uses HTTPS"
+    else
+        warn "APP_URL not HTTPS ($app_url)"
+    fi
+
+    say "3. Installation state"
+    [[ -f storage/app/installed.lock ]] \
+                             && pass "installed.lock present"     || fail "installed.lock missing"
+
+    say "4. Writable directories"
+    for dir in storage/app storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache; do
+        [[ -w "$dir" ]]      && pass "$dir writable"             || fail "$dir not writable"
+    done
+
+    say "5. Storage symlink"
+    if [[ -L public/storage ]]; then
+        local target
+        target=$(readlink -f public/storage 2>/dev/null || readlink public/storage)
+        [[ -d "$target" ]]   && pass "public/storage → $target"  || fail "public/storage symlink broken"
+    else
+        fail "public/storage symlink missing (run: php artisan storage:link)"
+    fi
+
+    say "6. Database"
+    if "$PHP_BIN" artisan db:show --no-interaction 2>/dev/null | grep -q 'Connection'; then
+        pass "Database connection OK"
+    else
+        fail "Database connection failed"
+    fi
+
+    local pending
+    pending=$("$PHP_BIN" artisan migrate:status --no-interaction 2>/dev/null | grep -c 'Pending' || true)
+    if [[ "$pending" -eq 0 ]]; then
+        pass "All migrations applied"
+    else
+        fail "$pending pending migration(s)"
+    fi
+
+    say "7. Services"
+    if crontab -l 2>/dev/null | grep -q 'schedule:run'; then
+        pass "Cron schedule:run configured"
+    else
+        warn "No cron for schedule:run"
+    fi
+
+    say "8. Health check"
+    if [[ -n "${app_url:-}" ]] && command -v curl &>/dev/null; then
+        local status
+        status=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "${app_url}/" 2>/dev/null || echo "000")
+        if [[ "$status" -ge 200 && "$status" -lt 400 ]]; then
+            pass "HTTP $status"
+        else
+            warn "HTTP $status (may need web server config)"
+        fi
+    else
+        warn "Skipped (curl not available or APP_URL not set)"
+    fi
+}
+
+# --- Source verification (dev/CI) ---------------------------------------------
+
+verify_source() {
+    say "Source checkout — full verification"
+
+    check_php
+    check_extensions
+
+    [[ -f vendor/autoload.php ]] && pass "vendor/autoload.php"    || die "vendor/autoload.php missing"
+    [[ -f public/build/manifest.json ]] && pass "Vite manifest"   || warn "Vite manifest missing"
+    [[ -f BUILD.json ]] && pass "BUILD.json" || warn "BUILD.json not found"
+
+    for dir in storage/app storage/framework storage/logs bootstrap/cache; do
+        [[ -w "$dir" ]] && pass "$dir/ writable" || fail "$dir/ NOT writable"
+    done
+
+    local ENV_SUM_BEFORE="" CREATED_ENV=""
+    [[ -f .env ]] && ENV_SUM_BEFORE="$(cksum .env)"
 
     TMP_DB="$(mktemp -t listinghub_verify_XXXXXX.sqlite)"
-    CREATED_ENV=""
     cleanup() {
         rm -f "$TMP_DB"
-        [ -n "$CREATED_ENV" ] && rm -f .env
-        if [ -n "$ENV_SUM_BEFORE" ] && [ "$ENV_SUM_BEFORE" != "$(cksum .env 2>/dev/null)" ]; then
-            printf '\n\033[1;31m!! pre-existing .env changed during verification — investigate\033[0m\n' >&2
-        fi
+        [[ -n "$CREATED_ENV" ]] && rm -f .env
     }
     trap cleanup EXIT
 
-    if [ ! -f .env ]; then
-        cp .env.example .env
-        CREATED_ENV=1
+    [[ ! -f .env ]] && cp .env.example .env && CREATED_ENV=1
+
+    export APP_ENV=testing APP_DEBUG=true
+    export DB_CONNECTION=sqlite DB_DATABASE="$TMP_DB"
+    export CACHE_STORE=array SESSION_DRIVER=array QUEUE_CONNECTION=sync MAIL_MAILER=array
+    export APP_KEY="base64:$("$PHP_BIN" -r 'echo base64_encode(random_bytes(32));')"
+
+    if command -v composer &>/dev/null; then
+        say "composer validate --strict"
+        composer validate --strict && pass "composer.json valid" || fail "composer.json invalid"
     fi
 
-    export APP_ENV=testing
-    export APP_DEBUG=true
-    export DB_CONNECTION=sqlite
-    export DB_DATABASE="$TMP_DB"
-    export CACHE_STORE=array
-    export SESSION_DRIVER=array
-    export QUEUE_CONNECTION=sync
-    export MAIL_MAILER=array
-    export APP_KEY="base64:$(php -r 'echo base64_encode(random_bytes(32));')"
+    say "migrate:fresh --seed (throwaway SQLite)"
+    "$PHP_BIN" artisan migrate:fresh --seed && pass "Migrate + seed OK" || fail "Migrate + seed failed"
 
-    say "3a. composer validate --strict"
-    composer validate --strict
+    say "Test suite"
+    "$PHP_BIN" artisan test && pass "Tests passed" || fail "Tests failed"
+}
 
-    say "3b. migrate:fresh --seed (throwaway SQLite)"
-    php artisan migrate:fresh --seed
+# --- Main ---------------------------------------------------------------------
 
-    say "3c. test suite"
-    composer test
+MODE="${1:-auto}"
 
-    say "3d. php artisan about"
-    php artisan about
-else
-    say "3. Deploy package — structural verification only"
-    warn "No .git or composer — skipping migrate/seed/test"
-    warn "Run the /install wizard to complete setup"
+case "$MODE" in
+    --package)
+        verify_package
+        ;;
+    --installed)
+        verify_installed
+        ;;
+    --source)
+        verify_source
+        ;;
+    auto|"")
+        if [[ -d .git ]] && command -v composer &>/dev/null; then
+            verify_source
+        elif [[ -f storage/app/installed.lock ]]; then
+            verify_installed
+        else
+            verify_package
+        fi
+        ;;
+    *)
+        echo "Usage: $0 [--package | --installed | --source]"
+        echo ""
+        echo "  --package    Verify archive integrity (pre-install)"
+        echo "  --installed  Verify runtime health (post-install)"
+        echo "  --source     Full dev verification (migrate, test)"
+        echo "  (no args)    Auto-detect mode"
+        exit 1
+        ;;
+esac
+
+echo ""
+echo "────────────────────"
+printf "Results: ${GREEN}%d passed${NC}, ${RED}%d failed${NC}, ${YELLOW}%d warnings${NC}\n" "$PASS" "$FAIL" "$WARN"
+
+if [[ $FAIL -gt 0 ]]; then
+    printf "${RED}Verification FAILED.${NC}\n"
+    exit 1
 fi
 
-say "ALL GREEN — verification passed"
+printf "${GREEN}Verification passed.${NC}\n"
