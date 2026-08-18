@@ -17,6 +17,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class PageContentBlockController extends Controller
 {
@@ -26,6 +27,14 @@ class PageContentBlockController extends Controller
         private readonly DeleteContentBlock $deleter,
         private readonly ReorderContentBlocks $reorderer,
     ) {}
+
+    /** Abort 404 unless the block actually belongs to the given page. */
+    private function ensureOwnership(Page $page, ContentBlock $block): void
+    {
+        if ($block->owner_type !== $page->getMorphClass() || $block->owner_id !== $page->id) {
+            throw new NotFoundHttpException;
+        }
+    }
 
     public function create(Page $page): View
     {
@@ -41,6 +50,10 @@ class PageContentBlockController extends Controller
             'block_type' => ['required', 'string'],
             'content' => ['nullable', 'array'],
             'content.tiptap' => ['nullable', 'array'],
+            'content.title' => ['nullable', 'string', 'max:255'],
+            'content.subtitle' => ['nullable', 'string', 'max:500'],
+            'content.cta_text' => ['nullable', 'string', 'max:100'],
+            'content.cta_url' => ['nullable', 'string', 'max:2048', 'regex:/^(\/[^\s]*|https:\/\/[^\s]+)$/'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
         ]);
 
@@ -60,6 +73,7 @@ class PageContentBlockController extends Controller
 
     public function edit(Page $page, ContentBlock $block): View
     {
+        $this->ensureOwnership($page, $block);
         $block->load('revisions');
 
         return view('admin.pages.blocks-edit', [
@@ -70,6 +84,8 @@ class PageContentBlockController extends Controller
 
     public function update(Request $request, Page $page, ContentBlock $block): RedirectResponse
     {
+        $this->ensureOwnership($page, $block);
+
         $data = $request->validate([
             'content' => ['nullable', 'array'],
             'content.tiptap' => ['nullable', 'array'],
@@ -83,6 +99,7 @@ class PageContentBlockController extends Controller
 
     public function destroy(Request $request, Page $page, ContentBlock $block): RedirectResponse
     {
+        $this->ensureOwnership($page, $block);
         $this->deleter->handle($block, $request->user());
 
         return redirect()->route('admin.pages.blocks', $page)
@@ -120,6 +137,8 @@ class PageContentBlockController extends Controller
 
     public function publish(Request $request, Page $page, ContentBlock $block): RedirectResponse
     {
+        $this->ensureOwnership($page, $block);
+
         $block->status = ContentBlockStatus::Published;
         $block->published_at ??= now();
         $block->updated_by = $request->user()?->getKey();

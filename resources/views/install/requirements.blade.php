@@ -21,6 +21,16 @@
         @endforeach
     </ul>
 
+    <h3>Required functions</h3>
+    <ul>
+        @foreach ($functions as $name => $available)
+            <li>
+                <span>{{ $name }}()</span>
+                <span class="{{ $available ? 'ok' : 'bad' }}">{{ $available ? 'OK' : 'MISSING' }}</span>
+            </li>
+        @endforeach
+    </ul>
+
     <h3>Writable paths</h3>
     <ul>
         @foreach ($writable as $path => $ok)
