@@ -9,10 +9,8 @@ use App\Actions\Categories\UpdateCategory as UpdateCategoryAction;
 use App\Filament\Resources\CategoryResource;
 use App\Models\Category;
 use Filament\Actions\DeleteAction;
-use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Validation\ValidationException;
 
 class EditCategory extends EditRecord
 {
