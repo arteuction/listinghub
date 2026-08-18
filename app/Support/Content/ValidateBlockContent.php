@@ -14,7 +14,8 @@ final class ValidateBlockContent
     /**
      * Validate content against the block type schema.
      *
-     * @param array<string, mixed> $content
+     * @param  array<string, mixed>  $content
+     *
      * @throws ValidationException
      */
     public static function validate(ContentBlockType $type, array $content): void

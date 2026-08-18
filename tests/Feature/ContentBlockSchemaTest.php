@@ -5,7 +5,6 @@ declare(strict_types=1);
 use App\Actions\Content\CreateContentBlock;
 use App\Enums\ContentBlockType;
 use App\Support\Content\BlockSchema;
-use App\Support\Content\ValidateBlockContent;
 use Illuminate\Validation\ValidationException;
 
 it('accepts valid hero content', function () {

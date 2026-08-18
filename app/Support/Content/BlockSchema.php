@@ -59,7 +59,7 @@ final class BlockSchema
     /**
      * Reject unknown top-level keys in the content array.
      *
-     * @param array<string, mixed> $content
+     * @param  array<string, mixed>  $content
      * @return list<string> Unknown keys (empty = valid)
      */
     public static function unknownKeys(ContentBlockType $type, array $content): array
