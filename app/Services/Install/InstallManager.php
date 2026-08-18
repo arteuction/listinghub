@@ -128,7 +128,10 @@ class InstallManager
 
         // Create public/storage → storage/app/public symlink so uploaded
         // images are web-accessible without shell access.
-        Artisan::call('storage:link', ['--force' => true]);
+        $linkExit = Artisan::call('storage:link', ['--force' => true]);
+        if ($linkExit !== 0) {
+            throw new RuntimeException('storage:link failed (exit '.$linkExit.'). Check filesystem permissions.');
+        }
 
         $verified = false;
 

@@ -8,6 +8,8 @@ enum ContentBlockRevisionOperation: string
 {
     case Created = 'created';
     case Updated = 'updated';
+    case Published = 'published';
+    case Unpublished = 'unpublished';
     case RolledBack = 'rolled_back';
     case Deleted = 'deleted';
 }

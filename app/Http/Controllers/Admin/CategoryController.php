@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Categories\CreateCategory as CreateCategoryAction;
+use App\Actions\Categories\DeleteCategory as DeleteCategoryAction;
+use App\Actions\Categories\UpdateCategory as UpdateCategoryAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CategoryRequest;
 use App\Models\Category;
 use App\Services\Catalog\PublicListingQuery;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 /**
@@ -31,7 +35,12 @@ use Illuminate\View\View;
  */
 class CategoryController extends Controller
 {
-    public function __construct(private readonly PublicListingQuery $catalog) {}
+    public function __construct(
+        private readonly PublicListingQuery $catalog,
+        private readonly CreateCategoryAction $creator,
+        private readonly UpdateCategoryAction $updater,
+        private readonly DeleteCategoryAction $deleter,
+    ) {}
 
     public function index(): View
     {
@@ -54,16 +63,7 @@ class CategoryController extends Controller
 
     public function store(CategoryRequest $request): RedirectResponse
     {
-        $data = $request->validated();
-
-        Category::query()->create([
-            'parent_id' => $data['parent_id'] ?? null,
-            'name' => $data['name'],
-            'slug' => $data['slug'],
-            'icon' => $data['icon'] ?? null,
-            'sort_order' => $data['sort_order'],
-            'is_active' => (bool) ($data['is_active'] ?? false),
-        ]);
+        $this->creator->handle($request->validated());
 
         return redirect()->route('admin.categories.index')->with('status', 'Категорията е създадена.');
     }
@@ -84,44 +84,22 @@ class CategoryController extends Controller
 
     public function update(CategoryRequest $request, Category $category): RedirectResponse
     {
-        $data = $request->validated();
-        $parentId = $data['parent_id'] ?? null;
-
-        // Re-check server-side: the excluded options in the select are a
-        // convenience, and the posted id is client input like any other.
-        if ($parentId !== null && in_array((int) $parentId, $this->catalog->categorySubtreeIds($category), true)) {
-            return back()->withInput()->withErrors([
-                'parent_id' => 'Категорията не може да е подкатегория на себе си или на свой наследник.',
-            ]);
+        try {
+            $this->updater->handle($category, $request->validated());
+        } catch (ValidationException $e) {
+            return back()->withInput()->withErrors($e->errors());
         }
-
-        $category->update([
-            'parent_id' => $parentId,
-            'name' => $data['name'],
-            'slug' => $data['slug'],
-            'icon' => $data['icon'] ?? null,
-            'sort_order' => $data['sort_order'],
-            'is_active' => (bool) ($data['is_active'] ?? false),
-        ]);
 
         return redirect()->route('admin.categories.index')->with('status', 'Категорията е обновена.');
     }
 
     public function destroy(Category $category): RedirectResponse
     {
-        if ($category->children()->exists()) {
-            return back()->withErrors([
-                'category' => 'Категорията има подкатегории. Преместете ги преди изтриване.',
-            ]);
+        try {
+            $this->deleter->handle($category);
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors());
         }
-
-        if ($category->listings()->exists()) {
-            return back()->withErrors([
-                'category' => 'Категорията съдържа обяви. Преместете ги или деактивирайте категорията.',
-            ]);
-        }
-
-        $category->delete();
 
         return redirect()->route('admin.categories.index')->with('status', 'Категорията е изтрита.');
     }

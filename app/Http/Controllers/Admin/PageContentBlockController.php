@@ -6,9 +6,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Actions\Content\CreateContentBlock;
 use App\Actions\Content\DeleteContentBlock;
+use App\Actions\Content\PublishContentBlock;
 use App\Actions\Content\ReorderContentBlocks;
+use App\Actions\Content\UnpublishContentBlock;
 use App\Actions\Content\UpdateContentBlock;
-use App\Enums\ContentBlockStatus;
 use App\Enums\ContentBlockType;
 use App\Http\Controllers\Controller;
 use App\Models\ContentBlock;
@@ -27,6 +28,8 @@ class PageContentBlockController extends Controller
         private readonly UpdateContentBlock $updater,
         private readonly DeleteContentBlock $deleter,
         private readonly ReorderContentBlocks $reorderer,
+        private readonly PublishContentBlock $publisher,
+        private readonly UnpublishContentBlock $unpublisher,
     ) {}
 
     /** Abort 404 unless the block actually belongs to the given page. */
@@ -41,7 +44,7 @@ class PageContentBlockController extends Controller
     {
         return view('admin.pages.blocks-create', [
             'page' => $page,
-            'types' => ContentBlockType::cases(),
+            'types' => ContentBlockType::creatableCases(),
         ]);
     }
 
@@ -53,6 +56,10 @@ class PageContentBlockController extends Controller
         ]);
 
         $type = ContentBlockType::from($request->input('block_type'));
+
+        if (! $type->isCreatable()) {
+            abort(422, 'Block type "'.$type->value.'" is not yet fully supported (needs schema, admin form, and public renderer).');
+        }
 
         $data = $request->validate(array_merge(
             ['block_type' => ['required', 'string'], 'sort_order' => ['nullable', 'integer', 'min:0']],
@@ -137,12 +144,16 @@ class PageContentBlockController extends Controller
     public function publish(Request $request, Page $page, ContentBlock $block): RedirectResponse
     {
         $this->ensureOwnership($page, $block);
-
-        $block->status = ContentBlockStatus::Published;
-        $block->published_at ??= now();
-        $block->updated_by = $request->user()?->getKey();
-        $block->save();
+        $this->publisher->handle($block, $request->user());
 
         return back()->with('status', 'Блокът е публикуван.');
+    }
+
+    public function unpublish(Request $request, Page $page, ContentBlock $block): RedirectResponse
+    {
+        $this->ensureOwnership($page, $block);
+        $this->unpublisher->handle($block, $request->user());
+
+        return back()->with('status', 'Блокът е върнат в чернова.');
     }
 }
