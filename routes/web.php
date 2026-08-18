@@ -300,6 +300,7 @@ Route::prefix('admin')->name('admin.')
                 Route::put('/{block}', [PageContentBlockController::class, 'update'])->name('update');
                 Route::delete('/{block}', [PageContentBlockController::class, 'destroy'])->name('destroy');
                 Route::post('/{block}/publish', [PageContentBlockController::class, 'publish'])->name('publish');
+                Route::post('/{block}/unpublish', [PageContentBlockController::class, 'unpublish'])->name('unpublish');
                 Route::post('/reorder', [PageContentBlockController::class, 'reorder'])->name('reorder');
             })->scopeBindings();
 
