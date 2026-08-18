@@ -1,5 +1,4 @@
 @import 'tailwindcss';
-@import 'tom-select/dist/css/tom-select.default.css';
 
 @layer base {
     :root { --bundle: admin; }
