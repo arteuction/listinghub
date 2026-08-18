@@ -22,9 +22,9 @@ FAIL=0
 WARN=0
 
 say()  { printf "\n${CYAN}== %s ==${NC}\n" "$1"; }
-pass() { printf "   ${GREEN}✓${NC} %s\n" "$1"; ((PASS++)); }
-fail() { printf "   ${RED}✗${NC} %s\n" "$1"; ((FAIL++)); }
-warn() { printf "   ${YELLOW}⚠${NC} %s\n" "$1"; ((WARN++)); }
+pass() { printf "   ${GREEN}✓${NC} %s\n" "$1"; ((PASS++)) || true; }
+fail() { printf "   ${RED}✗${NC} %s\n" "$1"; ((FAIL++)) || true; }
+warn() { printf "   ${YELLOW}⚠${NC} %s\n" "$1"; ((WARN++)) || true; }
 die()  { printf "\n${RED}!! %s${NC}\n" "$1" >&2; exit 1; }
 
 PHP_BIN="${PHP_BIN:-php}"
