@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Actions\Content\CreateContentBlock;
+use App\Actions\Content\DeleteContentBlock;
 use App\Actions\Content\RollbackContentBlock;
 use App\Actions\Content\UpdateContentBlock;
 use App\Enums\ContentBlockRevisionOperation;
@@ -213,3 +214,83 @@ it('rejects rollback to the current or a future version', function (int $target)
         expectedVersion: 1,
     ))->toThrow(ContentBlockConflict::class);
 })->with([1, 2]);
+
+it('deletes a freshly created block without a version collision', function () {
+    $actor = User::factory()->create();
+    $block = app(CreateContentBlock::class)->handle(
+        ContentBlockType::RichText,
+        cbDocument('Ще бъде изтрит'),
+        actor: $actor,
+    );
+
+    expect($block->version)->toBe(1)
+        ->and($block->revisions()->count())->toBe(1);
+
+    app(DeleteContentBlock::class)->handle($block, $actor);
+
+    $fresh = ContentBlock::withTrashed()->findOrFail($block->id);
+
+    expect($fresh->deleted_at)->not->toBeNull()
+        ->and($fresh->version)->toBe(2);
+
+    $revisions = $fresh->revisions()->reorder('version')->get();
+
+    expect($revisions)->toHaveCount(2)
+        ->and($revisions->pluck('version')->all())->toBe([1, 2])
+        ->and($revisions[0]->operation)->toBe(ContentBlockRevisionOperation::Created)
+        ->and($revisions[1]->operation)->toBe(ContentBlockRevisionOperation::Deleted)
+        ->and($revisions[1]->actor_id)->toBe($actor->id);
+});
+
+it('deletes an updated block with monotonically increasing revision versions', function () {
+    $actor = User::factory()->create();
+    $block = app(CreateContentBlock::class)->handle(
+        ContentBlockType::Hero,
+        cbDocument('Версия 1'),
+        actor: $actor,
+    );
+
+    $block = app(UpdateContentBlock::class)->handle(
+        $block,
+        ['content' => cbDocument('Версия 2')],
+        expectedVersion: 1,
+        actor: $actor,
+    );
+
+    $block = app(UpdateContentBlock::class)->handle(
+        $block,
+        ['content' => cbDocument('Версия 3')],
+        expectedVersion: 2,
+        actor: $actor,
+    );
+
+    expect($block->version)->toBe(3);
+
+    app(DeleteContentBlock::class)->handle($block, $actor);
+
+    $fresh = ContentBlock::withTrashed()->findOrFail($block->id);
+    $versions = $fresh->revisions()->reorder('version')->pluck('version')->all();
+
+    expect($fresh->version)->toBe(4)
+        ->and($versions)->toBe([1, 2, 3, 4]);
+});
+
+it('records a full snapshot in the delete revision', function () {
+    $actor = User::factory()->create();
+    $block = app(CreateContentBlock::class)->handle(
+        ContentBlockType::Faq,
+        ['title' => 'ЧЗВ', 'items' => [['question' => 'Въпрос?', 'answer' => 'Отговор.']]],
+        actor: $actor,
+    );
+
+    app(DeleteContentBlock::class)->handle($block, $actor);
+
+    $deleteRevision = ContentBlock::withTrashed()->findOrFail($block->id)
+        ->revisions()
+        ->where('operation', ContentBlockRevisionOperation::Deleted)
+        ->sole();
+
+    expect($deleteRevision->snapshot)->toHaveKey('uuid', $block->uuid)
+        ->and($deleteRevision->snapshot)->toHaveKey('schema_version', ContentBlock::SNAPSHOT_SCHEMA_VERSION)
+        ->and($deleteRevision->snapshot['content'])->toHaveKey('title', 'ЧЗВ');
+});

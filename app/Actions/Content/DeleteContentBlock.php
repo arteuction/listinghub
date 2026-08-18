@@ -17,15 +17,20 @@ final class DeleteContentBlock
     public function handle(ContentBlock $block, ?User $actor = null): void
     {
         DB::transaction(function () use ($block, $actor): void {
+            /** @var ContentBlock $locked */
+            $locked = ContentBlock::query()->lockForUpdate()->findOrFail($block->getKey());
+
+            $locked->version++;
+            $locked->updated_by = $actor?->getKey();
+            $locked->save();
+
             $this->revisions->record(
-                $block,
+                $locked,
                 ContentBlockRevisionOperation::Deleted,
                 $actor,
             );
 
-            $block->updated_by = $actor?->getKey();
-            $block->save();
-            $block->delete(); // soft delete
+            $locked->delete(); // soft delete
         });
     }
 }

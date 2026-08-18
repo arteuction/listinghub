@@ -90,9 +90,6 @@ it('deletes a content block', function () {
         ContentBlockType::RichText, [], $this->page, actor: $this->admin,
     );
 
-    // Bump version so the delete revision doesn't collide with the create revision (known revision schema bug)
-    $block->update(['version' => 2]);
-
     $this->actingAs($this->admin)
         ->delete(route('admin.pages.blocks.destroy', [$this->page, $block]))
         ->assertRedirect();
