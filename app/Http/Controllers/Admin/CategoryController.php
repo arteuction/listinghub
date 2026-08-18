@@ -40,12 +40,12 @@ class CategoryController extends Controller
         private readonly CreateCategoryAction $creator,
         private readonly UpdateCategoryAction $updater,
         private readonly DeleteCategoryAction $deleter,
-    ) {
-        $this->authorizeResource(Category::class, 'category');
-    }
+    ) {}
 
     public function index(): View
     {
+        $this->authorize('viewAny', Category::class);
+
         return view('admin.categories.index', [
             'categories' => Category::query()
                 ->withCount(['children', 'listings'])
@@ -57,6 +57,8 @@ class CategoryController extends Controller
 
     public function create(): View
     {
+        $this->authorize('create', Category::class);
+
         return view('admin.categories.form', [
             'category' => null,
             'parents' => Category::query()->orderBy('name')->get(),
@@ -65,6 +67,8 @@ class CategoryController extends Controller
 
     public function store(CategoryRequest $request): RedirectResponse
     {
+        $this->authorize('create', Category::class);
+
         $this->creator->handle($request->validated());
 
         return redirect()->route('admin.categories.index')->with('status', 'Категорията е създадена.');
@@ -72,6 +76,8 @@ class CategoryController extends Controller
 
     public function edit(Category $category): View
     {
+        $this->authorize('update', $category);
+
         // The subtree cannot be a parent of its own root, so it is not offered.
         $forbidden = $this->catalog->categorySubtreeIds($category);
 
@@ -86,6 +92,8 @@ class CategoryController extends Controller
 
     public function update(CategoryRequest $request, Category $category): RedirectResponse
     {
+        $this->authorize('update', $category);
+
         try {
             $this->updater->handle($category, $request->validated());
         } catch (ValidationException $e) {
@@ -97,6 +105,8 @@ class CategoryController extends Controller
 
     public function destroy(Category $category): RedirectResponse
     {
+        $this->authorize('delete', $category);
+
         try {
             $this->deleter->handle($category);
         } catch (ValidationException $e) {
