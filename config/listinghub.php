@@ -17,7 +17,7 @@ return [
     // Package version — single source of truth.
     // Build tooling writes BUILD.json (commit SHA, timestamp, checksums);
     // this constant tracks the semantic release.
-    'version' => '3.6.1',
+    'version' => '3.6.3',
 
     // Listing lifecycle statuses (mirrored by App\Enums\ListingStatus).
     'listing_statuses' => ['draft', 'pending', 'published', 'suspended'],
