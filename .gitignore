@@ -50,3 +50,6 @@ yarn.lock
 /test-results
 /storage/lighthouse
 /.lighthouseci
+
+# Upgrade backups
+/backups

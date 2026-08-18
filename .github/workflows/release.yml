@@ -13,6 +13,8 @@ on:
 
 permissions:
   contents: write
+  id-token: write
+  attestations: write
 
 jobs:
   build:
@@ -42,6 +44,9 @@ jobs:
           npm ci --ignore-scripts
           npm run build
 
+      - name: Bundle size check
+        run: node scripts/check-bundle-size.mjs
+
       - name: Determine version
         id: version
         run: |
@@ -55,17 +60,54 @@ jobs:
 
       - name: Generate BUILD.json
         run: |
-          cat > BUILD.json <<MANIFEST
+          cat > BUILD.json <<EOF
           {
-              "version": "${{ steps.version.outputs.version }}",
-              "commit": "${{ steps.version.outputs.commit }}",
-              "commit_short": "${{ steps.version.outputs.commit_short }}",
-              "built_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-              "php_min": "8.3.0",
-              "laravel": "13.x"
+            "version": "${{ steps.version.outputs.version }}",
+            "commit": "${{ steps.version.outputs.commit }}",
+            "commit_short": "${{ steps.version.outputs.commit_short }}",
+            "branch": "${{ github.ref_name }}",
+            "built_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "php_min": "8.3.0",
+            "laravel": "13.x"
           }
-          MANIFEST
-          cat BUILD.json
+          EOF
+
+      - name: Generate THIRD_PARTY_LICENSES.txt
+        run: |
+          echo "THIRD_PARTY_LICENSES" > THIRD_PARTY_LICENSES.txt
+          echo "=====================" >> THIRD_PARTY_LICENSES.txt
+          echo "" >> THIRD_PARTY_LICENSES.txt
+          echo "Generated: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> THIRD_PARTY_LICENSES.txt
+          echo "ListingHub v${{ steps.version.outputs.version }}" >> THIRD_PARTY_LICENSES.txt
+          echo "" >> THIRD_PARTY_LICENSES.txt
+          echo "== Composer packages ==" >> THIRD_PARTY_LICENSES.txt
+          echo "" >> THIRD_PARTY_LICENSES.txt
+          php -r '
+            $installed = json_decode(file_get_contents("vendor/composer/installed.json"), true);
+            $packages = $installed["packages"] ?? $installed;
+            usort($packages, fn($a, $b) => strcmp($a["name"], $b["name"]));
+            foreach ($packages as $p) {
+                $name = $p["name"];
+                $version = $p["version"] ?? "unknown";
+                $license = implode(", ", $p["license"] ?? ["unknown"]);
+                echo "{$name} ({$version}) — {$license}\n";
+            }
+          ' >> THIRD_PARTY_LICENSES.txt
+          echo "" >> THIRD_PARTY_LICENSES.txt
+          echo "== NPM packages (build-time, bundled output only) ==" >> THIRD_PARTY_LICENSES.txt
+          echo "" >> THIRD_PARTY_LICENSES.txt
+          node -e '
+            const pkg = require("./package.json");
+            const deps = { ...pkg.dependencies };
+            for (const [name, version] of Object.entries(deps).sort()) {
+              let license = "unknown";
+              try {
+                const p = require(`./node_modules/${name}/package.json`);
+                license = p.license || "unknown";
+              } catch {}
+              console.log(`${name} (${version}) — ${license}`);
+            }
+          ' >> THIRD_PARTY_LICENSES.txt
 
       - name: Assemble deploy directory
         run: |
@@ -73,18 +115,23 @@ jobs:
           STAGING="/tmp/${WRAPPER}"
           mkdir -p "${STAGING}"
 
-          # Copy app code (excludes .git, node_modules via rsync)
           rsync -a \
             --exclude='.git' \
             --exclude='node_modules' \
             --exclude='tests' \
             --exclude='.github' \
             --exclude='.env' \
+            --exclude='.env.backup' \
+            --exclude='.env.production' \
             --exclude='database/database.sqlite' \
             --exclude='storage/app/installed.lock' \
             --exclude='storage/app/installation.running' \
             --exclude='storage/app/installation.pending' \
             --exclude='storage/app/purifier' \
+            --exclude='storage/logs/*.log' \
+            --exclude='storage/framework/sessions/*' \
+            --exclude='storage/framework/cache/data/*' \
+            --exclude='storage/framework/views/*.php' \
             --exclude='phpstan.neon' \
             --exclude='phpstan-baseline.neon' \
             --exclude='deptrac.yaml' \
@@ -99,24 +146,31 @@ jobs:
             --exclude='lefthook.yml' \
             --exclude='lighthouserc.json' \
             --exclude='renovate.json' \
+            --exclude='scripts/build-deploy.ps1' \
+            --exclude='scripts/check-bundle-size.mjs' \
+            --exclude='backups/' \
+            --exclude='resources/js/' \
+            --exclude='resources/css/' \
             ./ "${STAGING}/"
 
           # Ensure writable dirs with .gitkeep
-          for dir in storage/app storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache; do
+          for dir in storage/app storage/app/public storage/framework/cache storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache; do
             mkdir -p "${STAGING}/${dir}"
             touch "${STAGING}/${dir}/.gitkeep"
           done
+
+          # Make shell scripts executable
+          chmod +x "${STAGING}/install.sh" "${STAGING}/verify.sh" "${STAGING}/upgrade.sh"
 
           echo "STAGING=${STAGING}" >> "$GITHUB_ENV"
           echo "WRAPPER=${WRAPPER}" >> "$GITHUB_ENV"
 
       - name: Normalize ownership and timestamps
         run: |
-          # Deterministic: all files owned by root:root, mtime = commit date
           COMMIT_DATE=$(git log -1 --format=%cI)
           find "${STAGING}" -exec touch -d "${COMMIT_DATE}" {} +
 
-      - name: Create tar.gz with wrapper directory
+      - name: Create tar.gz
         run: |
           cd /tmp
           tar czf "/tmp/${WRAPPER}.tar.gz" \
@@ -124,20 +178,41 @@ jobs:
             --sort=name \
             "${WRAPPER}"
 
-      - name: Create ZIP with wrapper directory
+      - name: Create ZIP
         run: |
           cd /tmp
           zip -r -X "/tmp/${WRAPPER}.zip" "${WRAPPER}"
 
-      - name: Generate checksums
+      - name: Generate SHA256SUMS
         id: checksums
         run: |
           cd /tmp
-          sha256sum "${WRAPPER}.tar.gz" "${WRAPPER}.zip" > "${WRAPPER}.sha256"
-          cat "${WRAPPER}.sha256"
+          sha256sum "${WRAPPER}.tar.gz" "${WRAPPER}.zip" > SHA256SUMS
+          cat SHA256SUMS
           echo "tarball=${WRAPPER}.tar.gz" >> "$GITHUB_OUTPUT"
           echo "zipball=${WRAPPER}.zip" >> "$GITHUB_OUTPUT"
-          echo "checksums=${WRAPPER}.sha256" >> "$GITHUB_OUTPUT"
+
+      - name: Verify package integrity
+        run: |
+          cd /tmp
+          mkdir -p verify-test
+          tar xzf "${WRAPPER}.tar.gz" -C verify-test
+          cd "verify-test/${WRAPPER}"
+          # Structural checks only (no PHP runtime in extracted dir)
+          test -f artisan
+          test -f .env.example
+          test ! -f .env
+          test -d vendor
+          test -d public/build
+          test -f BUILD.json
+          test ! -d .git
+          test ! -d node_modules
+          test ! -d tests
+          test -f install.sh
+          test -f verify.sh
+          test -f upgrade.sh
+          test -f THIRD_PARTY_LICENSES.txt
+          echo "Package structural verification passed."
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -146,7 +221,15 @@ jobs:
           path: |
             /tmp/${{ env.WRAPPER }}.tar.gz
             /tmp/${{ env.WRAPPER }}.zip
-            /tmp/${{ env.WRAPPER }}.sha256
+            /tmp/SHA256SUMS
+
+      - name: Attest provenance
+        if: startsWith(github.ref, 'refs/tags/v') && !inputs.dry_run
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            /tmp/${{ env.WRAPPER }}.tar.gz
+            /tmp/${{ env.WRAPPER }}.zip
 
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/v') && !inputs.dry_run
@@ -155,5 +238,5 @@ jobs:
           files: |
             /tmp/${{ env.WRAPPER }}.tar.gz
             /tmp/${{ env.WRAPPER }}.zip
-            /tmp/${{ env.WRAPPER }}.sha256
+            /tmp/SHA256SUMS
           generate_release_notes: true
