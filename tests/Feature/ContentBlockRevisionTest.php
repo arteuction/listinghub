@@ -15,10 +15,10 @@ use App\Models\ContentBlock;
 use App\Models\ContentBlockRevision;
 use App\Models\User;
 
-function cbDocument(string $text): array
+function tiptapDoc(string $text): array
 {
     return [
-        'document' => [
+        'tiptap' => [
             'type' => 'doc',
             'content' => [[
                 'type' => 'paragraph',
@@ -28,12 +28,25 @@ function cbDocument(string $text): array
     ];
 }
 
+function heroContent(string $title, string $subtitle = ''): array
+{
+    return array_filter([
+        'title' => $title,
+        'subtitle' => $subtitle ?: null,
+    ]);
+}
+
+function faqContent(string $title, array $items): array
+{
+    return ['title' => $title, 'items' => $items];
+}
+
 it('creates a draft block and its first full snapshot atomically', function () {
     $actor = User::factory()->create();
 
     $block = app(CreateContentBlock::class)->handle(
         ContentBlockType::Hero,
-        cbDocument('Добре дошли'),
+        heroContent('Добре дошли'),
         actor: $actor,
         sortOrder: 2000,
     );
@@ -51,7 +64,7 @@ it('creates a draft block and its first full snapshot atomically', function () {
         ->and($revision->version)->toBe(1)
         ->and($revision->actor_id)->toBe($actor->id)
         ->and($revision->snapshot['uuid'])->toBe($block->uuid)
-        ->and($revision->snapshot['content'])->toEqual(cbDocument('Добре дошли'))
+        ->and($revision->snapshot['content'])->toEqual(heroContent('Добре дошли'))
         ->and($revision->snapshot['schema_version'])->toBe(ContentBlock::SNAPSHOT_SCHEMA_VERSION);
 });
 
@@ -73,7 +86,7 @@ it('increments the version and stores a full snapshot for each real update', fun
     $actor = User::factory()->create();
     $block = app(CreateContentBlock::class)->handle(
         ContentBlockType::RichText,
-        cbDocument('Версия едно'),
+        tiptapDoc('Версия едно'),
         actor: $actor,
     );
 
@@ -81,7 +94,7 @@ it('increments the version and stores a full snapshot for each real update', fun
         $block,
         [
             'block_type' => ContentBlockType::ImageText,
-            'content' => cbDocument('Версия две'),
+            'content' => ['title' => 'Версия две', 'tiptap' => ['type' => 'doc', 'content' => []], 'layout' => 'left'],
             'sort_order' => 3000,
         ],
         expectedVersion: 1,
@@ -93,7 +106,7 @@ it('increments the version and stores a full snapshot for each real update', fun
 
     expect($updated->version)->toBe(2)
         ->and($updated->block_type)->toBe(ContentBlockType::ImageText)
-        ->and($updated->content)->toEqual(cbDocument('Версия две'))
+        ->and($updated->content)->toHaveKey('title', 'Версия две')
         ->and($revisions)->toHaveCount(2)
         ->and($revisions[1]->operation)->toBe(ContentBlockRevisionOperation::Updated)
         ->and($revisions[1]->reason)->toBe('Редакция на началната секция')
@@ -105,7 +118,7 @@ it('increments the version and stores a full snapshot for each real update', fun
         $updated,
         [
             'block_type' => ContentBlockType::ImageText,
-            'content' => cbDocument('Версия две'),
+            'content' => ['title' => 'Версия две', 'tiptap' => ['type' => 'doc', 'content' => []], 'layout' => 'left'],
             'sort_order' => 3000,
         ],
         expectedVersion: 2,
@@ -119,24 +132,24 @@ it('increments the version and stores a full snapshot for each real update', fun
 it('rejects a stale editor without changing data or writing a revision', function () {
     $block = app(CreateContentBlock::class)->handle(
         ContentBlockType::RichText,
-        cbDocument('Начало'),
+        tiptapDoc('Начало'),
     );
 
     app(UpdateContentBlock::class)->handle(
         $block,
-        ['content' => cbDocument('Запазено от първия редактор')],
+        ['content' => tiptapDoc('Запазено от първия редактор')],
         expectedVersion: 1,
     );
 
     expect(fn () => app(UpdateContentBlock::class)->handle(
         $block,
-        ['content' => cbDocument('Стара форма')],
+        ['content' => tiptapDoc('Стара форма')],
         expectedVersion: 1,
     ))->toThrow(ContentBlockConflict::class, 'expected 1, current version is 2');
 
     $fresh = ContentBlock::query()->findOrFail($block->id);
 
-    expect($fresh->content)->toEqual(cbDocument('Запазено от първия редактор'))
+    expect($fresh->content)->toEqual(tiptapDoc('Запазено от първия редактор'))
         ->and($fresh->version)->toBe(2)
         ->and($fresh->revisions()->count())->toBe(2);
 });
@@ -146,7 +159,7 @@ it('rolls back by appending a new version and preserves the complete history', f
     $owner = Category::factory()->create();
     $block = app(CreateContentBlock::class)->handle(
         ContentBlockType::Hero,
-        cbDocument('Оригинал'),
+        heroContent('Оригинал'),
         owner: $owner,
         actor: $actor,
     );
@@ -154,13 +167,13 @@ it('rolls back by appending a new version and preserves the complete history', f
 
     $versionTwo = app(UpdateContentBlock::class)->handle(
         $block,
-        ['content' => cbDocument('Втора версия')],
+        ['content' => heroContent('Втора версия')],
         expectedVersion: 1,
         actor: $actor,
     );
     $versionThree = app(UpdateContentBlock::class)->handle(
         $versionTwo,
-        ['block_type' => ContentBlockType::Announcement, 'content' => cbDocument('Трета версия')],
+        ['block_type' => ContentBlockType::Announcement, 'content' => ['text' => 'Трета версия']],
         expectedVersion: 2,
         actor: $actor,
     );
@@ -179,7 +192,7 @@ it('rolls back by appending a new version and preserves the complete history', f
         ->and($rolledBack->owner_type)->toBe(Category::class)
         ->and($rolledBack->owner_id)->toBe($owner->id)
         ->and($rolledBack->block_type)->toBe(ContentBlockType::Hero)
-        ->and($rolledBack->content)->toEqual(cbDocument('Оригинал'))
+        ->and($rolledBack->content)->toEqual(heroContent('Оригинал'))
         ->and($revisions)->toHaveCount(4)
         ->and($revisions->pluck('version')->all())->toBe([1, 2, 3, 4])
         ->and($revisions[3]->operation)->toBe(ContentBlockRevisionOperation::RolledBack)
@@ -204,8 +217,8 @@ it('does not allow a revision row to be changed or deleted', function () {
 
 it('rejects rollback to the current or a future version', function (int $target) {
     $block = app(CreateContentBlock::class)->handle(
-        ContentBlockType::RichText,
-        cbDocument('Текст'),
+        ContentBlockType::Hero,
+        heroContent('Текст'),
     );
 
     expect(fn () => app(RollbackContentBlock::class)->handle(
@@ -219,7 +232,7 @@ it('deletes a freshly created block without a version collision', function () {
     $actor = User::factory()->create();
     $block = app(CreateContentBlock::class)->handle(
         ContentBlockType::RichText,
-        cbDocument('Ще бъде изтрит'),
+        tiptapDoc('Ще бъде изтрит'),
         actor: $actor,
     );
 
@@ -246,20 +259,20 @@ it('deletes an updated block with monotonically increasing revision versions', f
     $actor = User::factory()->create();
     $block = app(CreateContentBlock::class)->handle(
         ContentBlockType::Hero,
-        cbDocument('Версия 1'),
+        heroContent('Версия 1'),
         actor: $actor,
     );
 
     $block = app(UpdateContentBlock::class)->handle(
         $block,
-        ['content' => cbDocument('Версия 2')],
+        ['content' => heroContent('Версия 2')],
         expectedVersion: 1,
         actor: $actor,
     );
 
     $block = app(UpdateContentBlock::class)->handle(
         $block,
-        ['content' => cbDocument('Версия 3')],
+        ['content' => heroContent('Версия 3')],
         expectedVersion: 2,
         actor: $actor,
     );
@@ -279,7 +292,7 @@ it('records a full snapshot in the delete revision', function () {
     $actor = User::factory()->create();
     $block = app(CreateContentBlock::class)->handle(
         ContentBlockType::Faq,
-        ['title' => 'ЧЗВ', 'items' => [['question' => 'Въпрос?', 'answer' => 'Отговор.']]],
+        faqContent('ЧЗВ', [['question' => 'Въпрос?', 'answer' => 'Отговор.']]),
         actor: $actor,
     );
 

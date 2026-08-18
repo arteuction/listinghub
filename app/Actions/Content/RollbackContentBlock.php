@@ -12,6 +12,7 @@ use App\Models\ContentBlock;
 use App\Models\ContentBlockRevision;
 use App\Models\User;
 use App\Services\Content\RecordContentBlockRevision;
+use App\Support\Content\ValidateBlockContent;
 use Illuminate\Support\Facades\DB;
 
 /** Rollback is append-only: it restores data into a brand-new version. */
@@ -51,6 +52,9 @@ final class RollbackContentBlock
 
             $snapshot = $target->snapshot;
             $this->guardSnapshot($snapshot, $targetVersion, $locked);
+
+            $restoredType = ContentBlockType::from((string) $snapshot['block_type']);
+            ValidateBlockContent::validate($restoredType, $snapshot['content']);
 
             $locked->fill([
                 'block_type' => ContentBlockType::from((string) $snapshot['block_type']),

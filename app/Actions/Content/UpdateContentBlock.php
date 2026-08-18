@@ -10,7 +10,7 @@ use App\Exceptions\ContentBlockConflict;
 use App\Models\ContentBlock;
 use App\Models\User;
 use App\Services\Content\RecordContentBlockRevision;
-use App\Support\Tiptap\TiptapValidator;
+use App\Support\Content\ValidateBlockContent;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -79,14 +79,13 @@ final class UpdateContentBlock
                 throw new InvalidArgumentException('Content block content must be a JSON object.');
             }
 
-            if (array_key_exists('content', $normalized)
-                && isset($normalized['content']['tiptap'])
-                && is_array($normalized['content']['tiptap'])
-            ) {
-                (new TiptapValidator)->validate($normalized['content']['tiptap']);
-            }
-
             $locked->fill($normalized);
+
+            $finalType = $locked->block_type;
+            $finalContent = $locked->content;
+            if (is_array($finalContent)) {
+                ValidateBlockContent::validate($finalType, $finalContent);
+            }
 
             // MySQL normalises JSON key order alphabetically while SQLite
             // preserves insertion order, making isDirty() unreliable for the

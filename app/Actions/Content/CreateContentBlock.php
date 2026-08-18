@@ -10,7 +10,7 @@ use App\Enums\ContentBlockType;
 use App\Models\ContentBlock;
 use App\Models\User;
 use App\Services\Content\RecordContentBlockRevision;
-use App\Support\Tiptap\TiptapValidator;
+use App\Support\Content\ValidateBlockContent;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -28,9 +28,7 @@ final class CreateContentBlock
         ?User $actor = null,
         int $sortOrder = 1000,
     ): ContentBlock {
-        if (isset($content['tiptap']) && is_array($content['tiptap'])) {
-            (new TiptapValidator)->validate($content['tiptap']);
-        }
+        ValidateBlockContent::validate($type, $content);
 
         return DB::transaction(function () use ($type, $content, $owner, $actor, $sortOrder): ContentBlock {
             $block = ContentBlock::query()->create([

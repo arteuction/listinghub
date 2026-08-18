@@ -88,9 +88,9 @@ it('rejects unknown fields in UpdatePage', function () {
 it('reorders content blocks within a page owner', function () {
     $page = app(CreatePage::class)->handle('Reorder Test', 'reorder-test');
 
-    $a = app(CreateContentBlock::class)->handle(ContentBlockType::RichText, [], $page, sortOrder: 1000);
-    $b = app(CreateContentBlock::class)->handle(ContentBlockType::RichText, [], $page, sortOrder: 2000);
-    $c = app(CreateContentBlock::class)->handle(ContentBlockType::RichText, [], $page, sortOrder: 3000);
+    $a = app(CreateContentBlock::class)->handle(ContentBlockType::RichText, ['tiptap' => ['type' => 'doc', 'content' => []]], $page, sortOrder: 1000);
+    $b = app(CreateContentBlock::class)->handle(ContentBlockType::RichText, ['tiptap' => ['type' => 'doc', 'content' => []]], $page, sortOrder: 2000);
+    $c = app(CreateContentBlock::class)->handle(ContentBlockType::RichText, ['tiptap' => ['type' => 'doc', 'content' => []]], $page, sortOrder: 3000);
 
     // Reverse the order
     app(ReorderContentBlocks::class)->handle([$c->id, $b->id, $a->id], $page);
@@ -106,8 +106,8 @@ it('rejects a block ID that does not belong to the owner', function () {
     $pageA = app(CreatePage::class)->handle('Page A', 'page-a');
     $pageB = app(CreatePage::class)->handle('Page B', 'page-b');
 
-    $blockOnA = app(CreateContentBlock::class)->handle(ContentBlockType::RichText, [], $pageA);
-    $blockOnB = app(CreateContentBlock::class)->handle(ContentBlockType::RichText, [], $pageB);
+    $blockOnA = app(CreateContentBlock::class)->handle(ContentBlockType::RichText, ['tiptap' => ['type' => 'doc', 'content' => []]], $pageA);
+    $blockOnB = app(CreateContentBlock::class)->handle(ContentBlockType::RichText, ['tiptap' => ['type' => 'doc', 'content' => []]], $pageB);
 
     expect(fn () => app(ReorderContentBlocks::class)->handle([$blockOnA->id, $blockOnB->id], $pageA))
         ->toThrow(InvalidArgumentException::class);
@@ -115,7 +115,7 @@ it('rejects a block ID that does not belong to the owner', function () {
 
 it('rejects duplicate IDs in the reorder list', function () {
     $page = app(CreatePage::class)->handle('Dup Test', 'dup-test');
-    $block = app(CreateContentBlock::class)->handle(ContentBlockType::RichText, [], $page);
+    $block = app(CreateContentBlock::class)->handle(ContentBlockType::RichText, ['tiptap' => ['type' => 'doc', 'content' => []]], $page);
 
     expect(fn () => app(ReorderContentBlocks::class)->handle([$block->id, $block->id], $page))
         ->toThrow(InvalidArgumentException::class, 'duplicate');

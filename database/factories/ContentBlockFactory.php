@@ -28,7 +28,7 @@ class ContentBlockFactory extends Factory
             'version' => 1,
             'sort_order' => 1000,
             'content' => [
-                'document' => [
+                'tiptap' => [
                     'type' => 'doc',
                     'content' => [],
                 ],
