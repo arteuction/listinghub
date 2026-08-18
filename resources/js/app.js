@@ -1,14 +1,13 @@
 import Alpine from 'alpinejs';
-import TomSelect from 'tom-select';
 
 window.Alpine = Alpine;
-window.TomSelect = TomSelect;
+
 window.richTextEditor = function (opts) {
     return {
         editor: null,
         isFocused: false,
         async init() {
-            const { richTextEditor } = await import('./editor/rich-text.js');
+            const { richTextEditor } = await import('./features/rich-text.js');
             const component = richTextEditor(opts);
             for (const [k, v] of Object.entries(component)) {
                 if (k !== 'init') this[k] = v;
@@ -19,13 +18,14 @@ window.richTextEditor = function (opts) {
     };
 };
 
-document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('[data-tom-select]').forEach(el => {
-        const opts = {};
-        if (el.dataset.tomSelectCreate) opts.create = true;
-        if (el.multiple) opts.plugins = ['remove_button'];
-        new TomSelect(el, opts);
-    });
-});
+async function bootFeatures() {
+    if (document.querySelector('[data-tom-select]:not([data-initialized="tom-select"])')) {
+        const { initTomSelect } = await import('./features/tom-select.js');
+        initTomSelect();
+    }
+}
+
+document.addEventListener('DOMContentLoaded', bootFeatures);
+document.addEventListener('livewire:navigated', bootFeatures);
 
 Alpine.start();

@@ -4,6 +4,8 @@
     "scripts": {
         "dev": "vite",
         "build": "vite build",
+        "bundle:check": "node scripts/check-bundle-size.mjs",
+        "build:ci": "vite build && npm run bundle:check",
         "test:e2e": "playwright test",
         "test:e2e:ui": "playwright test --ui"
     },
