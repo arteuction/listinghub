@@ -40,7 +40,9 @@ class CategoryController extends Controller
         private readonly CreateCategoryAction $creator,
         private readonly UpdateCategoryAction $updater,
         private readonly DeleteCategoryAction $deleter,
-    ) {}
+    ) {
+        $this->authorizeResource(Category::class, 'category');
+    }
 
     public function index(): View
     {
